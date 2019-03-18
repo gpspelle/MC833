@@ -1,0 +1,9 @@
+Protocolo de comunicacao - P1 - MC833
+
+
+listar_curso;<curso_escolhido>
+listar_habilidades;<cidade_escolhida>
+add;<experiencia>;<perfil>
+email_experiencia;<email>
+listar_tudo
+email_tudo;<email>
