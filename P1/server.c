@@ -47,7 +47,7 @@ void create_socket(int client_socket) {
     send(new_socket,".", 1 ,0);
     close(new_socket);
 
-    }
+}
 
 int main() {
 
@@ -55,9 +55,6 @@ int main() {
     struct sockaddr_in server_address;
     struct sockaddr_storage server_storage;
     socklen_t addr_size;
-
-    /* Process ID table */
-    pid_t pid[20];
 
     /* Creating our socket */
     server_socket = socket(PF_INET, SOCK_STREAM, 0);
@@ -85,8 +82,7 @@ int main() {
         printf("ERROR! LISTEN PROBLEM\n");
     }
     
-    int i = 0;
-    while(1) {
+    for(;;) {
 
         /* Creates a new socket for our new running process */
         addr_size = sizeof(server_storage);
@@ -96,15 +92,10 @@ int main() {
         if ((pid_child = fork())==0) {
             /* For the child process  */
             create_socket(new_socket);
+            break;
         } else {
-            pid[i++] = pid_child;
-            if(i >= 19) {
-                i = 0;
-                while(i < 20) {
-                    waitpid(pid[i++], NULL, 0);
-                }
-                i = 0;
-            }
+            close(new_socket);
+            continue;
         }
     }
     return 0;
