@@ -3,11 +3,12 @@
 #include <string.h>
 #include <mysql.h>
 
-#define userBD "redes"
+#define rootDB "root"
+#define pswd_root "123"
+#define userDB "redes"
 #define pswd "123"
 #define network "localhost"
-#define databasea "MC833"
-#define databaseb "MC833;"
+#define DB "MC833"
 #define tabela "Usuarios"
 
 
@@ -28,14 +29,28 @@ void return_error(MYSQL *con) {
 
 void create_database(MYSQL *con) {  
 
-    if (mysql_query(con, "DROP database IF EXISTS "databaseb)) {
+    if (mysql_query(con, "DROP database IF EXISTS "DB";")) {
         return_error(con);
     }
 
-    if (mysql_query(con, "CREATE database "databaseb)) {
+    if (mysql_query(con, "CREATE database "DB";")) {
         return_error(con);
     } else {
-        printf("Succesfully created Database "databasea"\n");
+        printf("Succesfully created Database "DB"\n");
+    }
+
+}
+
+void create_DBuser(MYSQL *con) {  
+
+    mysql_query(con, "FLUSH PRIVILEGES;");
+    mysql_query(con, "DROP User IF EXISTS '"userDB"'@'"network"';");
+
+    if (mysql_query(con, "CREATE User '"userDB"'@'"network"' IDENTIFIED BY '"pswd"';")) {
+        return_error(con);
+    } else {
+        printf("Succesfully created User "userDB"\n");
+        mysql_query(con, "GRANT ALL PRIVILEGES ON *.* TO '"userDB"'@'"network"';");
     }
 
 }
@@ -193,14 +208,24 @@ void test_image(MYSQL *con) {
 
 int main() {
 
-    MYSQL *con = mysql_init(NULL);
+    MYSQL *con_root = mysql_init(NULL);
 
-    if (con == NULL) {
-        fprintf(stderr, "%s\n", mysql_error(con));
+    if (con_root == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con_root));
         exit(1);
     }
 
-    if (mysql_real_connect(con, network, userBD, pswd, NULL, 0, NULL, 0) == NULL) {
+    if (mysql_real_connect(con_root, network, rootDB, pswd_root, NULL, 0, NULL, 0) == NULL) {
+        return_error(con_root);
+    }  
+
+    /* Create a user for our MySQL environment using root access */
+    create_DBuser(con_root);
+
+    mysql_close(con_root);
+    MYSQL *con = mysql_init(NULL);
+
+    if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
         return_error(con);
     }  
 
@@ -208,10 +233,10 @@ int main() {
     create_database(con);
 
     /* Select specific database for use */
-    if (mysql_query(con, "Use "databaseb)) {
+    if (mysql_query(con, "Use "DB";")) {
         return_error(con);
     } else {
-        printf("Succesfully using "databasea"\n");
+        printf("Succesfully using "DB"\n");
     }
 
     /* Creating our user table */
