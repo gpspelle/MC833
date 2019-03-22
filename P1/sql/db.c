@@ -248,12 +248,51 @@ int main() {
     strcpy(gabriel.nome, "Gabriel");
     strcpy(gabriel.sobrenome, "Pellegrino da Silva");
     strcpy(gabriel.foto, "g172358.jpg");
-    strcpy(gabriel.residencia, "Campinas");
+    strcpy(gabriel.residencia, "Araras");
     strcpy(gabriel.formacao, "Engenharia da Computacao");
 
     add_user(con, &gabriel);
 
-    test_image(con);
+    userT giovanna;
+    strcpy(giovanna.email, "g173304@dac.unicamp.br");
+    strcpy(giovanna.nome, "Giovanna");
+    strcpy(giovanna.sobrenome, "Vendramini");
+    strcpy(giovanna.foto, "g173304.jpg");
+    strcpy(giovanna.residencia, "Campinas");
+    strcpy(giovanna.formacao, "Engenharia da Computacao");
+
+    add_user(con, &giovanna);
+
+    userT rafael;
+    strcpy(rafael.email, "r186145@dac.unicamp.br");
+    strcpy(rafael.nome, "Rafael");
+    strcpy(rafael.sobrenome, "Figueiredo Prudencio");
+    strcpy(rafael.foto, "r186145.jpg");
+    strcpy(rafael.residencia, "Campinas");
+    strcpy(rafael.formacao, "Engenharia da Computacao");
+
+    add_user(con, &rafael);
+
+    userT matheus;
+    strcpy(matheus.email, "m184403@dac.unicamp.br");
+    strcpy(matheus.nome, "Matheus");
+    strcpy(matheus.sobrenome, "Rotta Alves");
+    strcpy(matheus.foto, "m184403.jpg");
+    strcpy(matheus.residencia, "Campinas");
+    strcpy(matheus.formacao, "Engenharia da Computacao");
+
+    add_user(con, &matheus);
+
+    userT luma;
+    strcpy(luma.email, "l183171@dac.unicamp.br");
+    strcpy(luma.nome, "Luma");
+    strcpy(luma.sobrenome, "Oliveira Lombello");
+    strcpy(luma.foto, "l183171.jpg");
+    strcpy(luma.residencia, "Araras");
+    strcpy(luma.formacao, "Engenharia da Computacao");
+
+    add_user(con, &luma);
+
 
     return 0;
 }
