@@ -9,8 +9,9 @@
 #define pswd "123"
 #define network "localhost"
 #define DB "MC833"
-#define tabela "Usuarios"
-
+#define tabelaUSER "Usuarios"
+#define tabelaEXP "Experiencias"
+#define tabelaHAB "Habilidades"
 
 typedef struct user {
     char email[100];
@@ -57,14 +58,34 @@ void create_DBuser(MYSQL *con) {
 
 void create_table(MYSQL *con) {  
 
-    if (mysql_query(con, "DROP TABLE IF EXISTS "tabela";")) {
+    if (mysql_query(con, "DROP TABLE IF EXISTS "tabelaUSER";")) {
+        return_error(con);
+    }
+    
+    if (mysql_query(con, "DROP TABLE IF EXISTS "tabelaEXP";")) {
+        return_error(con);
+    }
+    
+    if (mysql_query(con, "DROP TABLE IF EXISTS "tabelaHAB";")) {
         return_error(con);
     }
 
-    if (mysql_query(con, "CREATE TABLE "tabela"(Personid int NOT NULL AUTO_INCREMENT, email Text, nome Text, sobrenome Text, foto MediumBlob, residencia Text, formacao Text, PRIMARY KEY(Personid));")) {
+    if (mysql_query(con, "CREATE TABLE "tabelaUSER"(Personid int NOT NULL AUTO_INCREMENT, email Text, nome Text, sobrenome Text, foto MediumBlob, residencia Text, formacao Text, PRIMARY KEY(Personid));")) {
         return_error(con);
     } else {
-        printf("Succesfully created Table "tabela"\n");
+        printf("Succesfully created Table "tabelaUSER"\n");
+    }
+    
+    if (mysql_query(con, "CREATE TABLE "tabelaEXP"(Expid int NOT NULL AUTO_INCREMENT, Personid int, exp Text, PRIMARY KEY(Expid));")) {
+        return_error(con);
+    } else {
+        printf("Succesfully created Table "tabelaEXP"\n");
+    }
+
+    if (mysql_query(con, "CREATE TABLE "tabelaHAB"(Habid int NOT NULL AUTO_INCREMENT, Personid int, hab Text, PRIMARY KEY(Habid));")) {
+        return_error(con);
+    } else {
+        printf("Succesfully created Table "tabelaHAB"\n");
     }
 
 }
@@ -132,7 +153,7 @@ void add_user(MYSQL *con, userT *u) {
         fprintf(stderr, "cannot close file handler\n");
     }
 
-    char query[100000] = "INSERT INTO "tabela" (email, nome, sobrenome, foto, residencia, formacao) VALUES('";
+    char query[100000] = "INSERT INTO "tabelaUSER" (email, nome, sobrenome, foto, residencia, formacao) VALUES('";
     strcat(query, u->email);
     strcat(query, "', '");
     strcat(query, u->nome);
@@ -170,7 +191,7 @@ void test_image(MYSQL *con) {
         exit(1);
     }
 
-    if (mysql_query(con, "SELECT foto FROM "tabela" WHERE Personid=1")) {
+    if (mysql_query(con, "SELECT foto FROM "tabelaUSER" WHERE Personid=1")) {
         return_error(con);
     }
       
@@ -250,6 +271,15 @@ int main() {
     strcpy(gabriel.foto, "g172358.jpg");
     strcpy(gabriel.residencia, "Araras");
     strcpy(gabriel.formacao, "Engenharia da Computacao");
+    
+    char exp_gab_1[100] = "CONPEC";
+    char exp_gab_2[100] = "CEPETRO";
+    char exp_gab_3[100] = "SEMANTIX";
+    
+    char hab_gab_1[100] = "C";
+    char hab_gab_2[100] = "Python";
+    char hab_gab_3[100] = "SQL";
+    char hab_gab_4[100] = "PARLER FRANCAIS";
 
     add_user(con, &gabriel);
 
@@ -261,6 +291,11 @@ int main() {
     strcpy(giovanna.residencia, "Campinas");
     strcpy(giovanna.formacao, "Engenharia da Computacao");
 
+    char exp_gi_1[100] = "BIOMEDICA";
+    
+    char hab_gi_1[100] = "VHDL";
+    char hab_gi_2[100] = "DEBUGAR";
+
     add_user(con, &giovanna);
 
     userT rafael;
@@ -270,6 +305,13 @@ int main() {
     strcpy(rafael.foto, "r186145.jpg");
     strcpy(rafael.residencia, "Campinas");
     strcpy(rafael.formacao, "Engenharia da Computacao");
+
+    char exp_raf_1[100] = "GRUPO DE ROBOTICA";
+    char exp_raf_2[100] = "ANALISE DE IMAGENS E VIDEOS";
+    
+    char hab_raf_1[100] = "PYTHON";
+    char hab_raf_2[100] = "C";
+    char hab_raf_3[100] = "LEAGUE OF LEGENDS";
 
     add_user(con, &rafael);
 
@@ -281,6 +323,14 @@ int main() {
     strcpy(matheus.residencia, "Campinas");
     strcpy(matheus.formacao, "Engenharia da Computacao");
 
+    char exp_mat_1[100] = "CONPEC";
+    char exp_mat_2[100] = "CEPETRO";
+    
+    char hab_mat_1[100] = "C";
+    char hab_mat_2[100] = "C++";
+    char hab_mat_3[100] = "HABLA ITALLIANO";
+    char hab_mat_4[100] = "ENCHER O SACO";
+
     add_user(con, &matheus);
 
     userT luma;
@@ -291,9 +341,15 @@ int main() {
     strcpy(luma.residencia, "Araras");
     strcpy(luma.formacao, "Engenharia da Computacao");
 
+    char exp_lum_1[100] = "CONPEC";
+    char exp_lum_2[100] = "INICIACAO CIENTIFICA";
+    
+    char hab_lum_1[100] = "C";
+    char hab_lum_2[100] = "ONTOLOGIAS";
+    char hab_lum_3[100] = "PARLER FRANCAIS";
+
     add_user(con, &luma);
-
-
+    
     return 0;
 }
 
