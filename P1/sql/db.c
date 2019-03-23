@@ -90,6 +90,80 @@ void create_table(MYSQL *con) {
 
 }
 
+void add_exps(MYSQL *con, char exps[][100], char *email, int num_exp) {
+
+    char query[100000] = "SELECT Personid FROM "tabelaUSER" WHERE email = '";
+    strcat(query, email);
+    strcat(query, "';");
+
+    if (mysql_query(con, query)) {
+        return_error(con);
+    }
+      
+    MYSQL_RES *result = mysql_store_result(con);
+        
+    if (result == NULL) {
+        return_error(con);
+    }
+    
+    int num_fields = mysql_num_fields(result);
+
+    MYSQL_ROW row;
+   
+    while ((row = mysql_fetch_row(result))) { 
+        for(int i = 0; i < num_fields; i++) { 
+            for(int j = 0; j < num_exp; j++) {
+                char query[100000] = "INSERT INTO "tabelaEXP" (Personid, exp) VALUES(";
+                strcat(query, row[i]);
+                strcat(query, ", '");
+                strcat(query, exps[j]);
+                strcat(query, "');");
+                printf("Query: [%s]\n", query);
+                if (mysql_query(con, query)) {
+                    return_error(con);
+                }
+            }
+        } 
+    }
+}
+
+void add_habs(MYSQL *con, char habs[][100], char *email, int num_habs) {
+
+    char query[100000] = "SELECT Personid FROM "tabelaUSER" WHERE email = '";
+    strcat(query, email);
+    strcat(query, "';");
+
+    if (mysql_query(con, query)) {
+        return_error(con);
+    }
+      
+    MYSQL_RES *result = mysql_store_result(con);
+        
+    if (result == NULL) {
+        return_error(con);
+    }
+    
+    int num_fields = mysql_num_fields(result);
+
+    MYSQL_ROW row;
+   
+    while ((row = mysql_fetch_row(result))) { 
+        for(int i = 0; i < num_fields; i++) { 
+            for(int j = 0; j < num_habs; j++) {
+                char query[100000] = "INSERT INTO "tabelaHAB" (Personid, hab) VALUES(";
+                strcat(query, row[i]);
+                strcat(query, ", '");
+                strcat(query, habs[j]);
+                strcat(query, "');");
+                printf("Query: [%s]\n", query);
+                if (mysql_query(con, query)) {
+                    return_error(con);
+                }
+            }
+        } 
+    }
+}
+
 void add_user(MYSQL *con, userT *u) {
 
     FILE *fp = fopen(u->foto, "rb");
@@ -164,7 +238,7 @@ void add_user(MYSQL *con, userT *u) {
     strcat(query, u->residencia);
     strcat(query, "', '");
     strcat(query, u->formacao);
-    strcat(query, "')");
+    strcat(query, "');");
 
     printf("Query: [%s]\n", query);
     
@@ -271,17 +345,24 @@ int main() {
     strcpy(gabriel.foto, "g172358.jpg");
     strcpy(gabriel.residencia, "Araras");
     strcpy(gabriel.formacao, "Engenharia da Computacao");
+   
+    char exps_gab[3][100]; 
+
+    strcpy(exps_gab[0], "CONPEC");
+    strcpy(exps_gab[1], "CEPETRO");
+    strcpy(exps_gab[2], "SEMANTIX");
+
     
-    char exp_gab_1[100] = "CONPEC";
-    char exp_gab_2[100] = "CEPETRO";
-    char exp_gab_3[100] = "SEMANTIX";
-    
-    char hab_gab_1[100] = "C";
-    char hab_gab_2[100] = "Python";
-    char hab_gab_3[100] = "SQL";
-    char hab_gab_4[100] = "PARLER FRANCAIS";
+    char habs_gab[4][100];
+    strcpy(habs_gab[0], "C");
+    strcpy(habs_gab[1], "Python");
+    strcpy(habs_gab[2], "SQL");
+    strcpy(habs_gab[3], "PARLER FRANCAIS");
 
     add_user(con, &gabriel);
+
+    add_exps(con, exps_gab, gabriel.email, 3);
+    add_habs(con, habs_gab, gabriel.email, 4);
 
     userT giovanna;
     strcpy(giovanna.email, "g173304@dac.unicamp.br");
@@ -291,12 +372,17 @@ int main() {
     strcpy(giovanna.residencia, "Campinas");
     strcpy(giovanna.formacao, "Engenharia da Computacao");
 
-    char exp_gi_1[100] = "BIOMEDICA";
+    char exps_gi[1][100]; 
+    strcpy(exps_gi[0], "BIOMEDICA");
     
-    char hab_gi_1[100] = "VHDL";
-    char hab_gi_2[100] = "DEBUGAR";
+    char habs_gi[2][100];
+    strcpy(habs_gi[0], "VHDL");
+    strcpy(habs_gi[1], "DEBUGAR");
 
     add_user(con, &giovanna);
+
+    add_exps(con, exps_gi, giovanna.email, 1);
+    add_habs(con, habs_gi, giovanna.email, 2);
 
     userT rafael;
     strcpy(rafael.email, "r186145@dac.unicamp.br");
@@ -306,14 +392,19 @@ int main() {
     strcpy(rafael.residencia, "Campinas");
     strcpy(rafael.formacao, "Engenharia da Computacao");
 
-    char exp_raf_1[100] = "GRUPO DE ROBOTICA";
-    char exp_raf_2[100] = "ANALISE DE IMAGENS E VIDEOS";
-    
-    char hab_raf_1[100] = "PYTHON";
-    char hab_raf_2[100] = "C";
-    char hab_raf_3[100] = "LEAGUE OF LEGENDS";
+    char exps_raf[2][100];
+    strcpy(exps_raf[0], "GRUPO DE ROBOTICA");
+    strcpy(exps_raf[1], "ANALISE DE IMAGENS E VIDEOS");
+   
+    char habs_raf[3][100]; 
+    strcpy(habs_raf[0], "PYTHON");
+    strcpy(habs_raf[1], "C");
+    strcpy(habs_raf[2], "LEAGUE OF LEGENDS");
 
     add_user(con, &rafael);
+
+    add_exps(con, exps_raf, rafael.email, 2);
+    add_habs(con, habs_raf, rafael.email, 3);
 
     userT matheus;
     strcpy(matheus.email, "m184403@dac.unicamp.br");
@@ -323,15 +414,20 @@ int main() {
     strcpy(matheus.residencia, "Campinas");
     strcpy(matheus.formacao, "Engenharia da Computacao");
 
-    char exp_mat_1[100] = "CONPEC";
-    char exp_mat_2[100] = "CEPETRO";
+    char exps_mat[2][100];
+    strcpy(exps_mat[0], "CONPEC");
+    strcpy(exps_mat[1], "CEPETRO");
     
-    char hab_mat_1[100] = "C";
-    char hab_mat_2[100] = "C++";
-    char hab_mat_3[100] = "HABLA ITALLIANO";
-    char hab_mat_4[100] = "ENCHER O SACO";
+    char habs_mat[4][100];
+    strcpy(habs_mat[0], "C");
+    strcpy(habs_mat[1], "C++");
+    strcpy(habs_mat[2], "HABLA ITALLIANO");
+    strcpy(habs_mat[3], "SER O BARNEY");
 
     add_user(con, &matheus);
+
+    add_exps(con, exps_mat, matheus.email, 2);
+    add_habs(con, habs_mat, matheus.email, 4);
 
     userT luma;
     strcpy(luma.email, "l183171@dac.unicamp.br");
@@ -341,15 +437,20 @@ int main() {
     strcpy(luma.residencia, "Araras");
     strcpy(luma.formacao, "Engenharia da Computacao");
 
-    char exp_lum_1[100] = "CONPEC";
-    char exp_lum_2[100] = "INICIACAO CIENTIFICA";
-    
-    char hab_lum_1[100] = "C";
-    char hab_lum_2[100] = "ONTOLOGIAS";
-    char hab_lum_3[100] = "PARLER FRANCAIS";
+    char exps_lum[2][100];
+    strcpy(exps_lum[0], "CONPEC");
+    strcpy(exps_lum[1], "INICIACAO CIENTIFICA");
+   
+    char habs_lum[3][100];
+    strcpy(habs_lum[0], "C");
+    strcpy(habs_lum[1], "ONTOLOGIAS");
+    strcpy(habs_lum[2], "PARLER FRANCAIS");
 
     add_user(con, &luma);
     
+    add_exps(con, exps_lum, luma.email, 2);
+    add_habs(con, habs_lum, luma.email, 3);
+
     return 0;
 }
 
