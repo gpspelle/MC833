@@ -429,6 +429,50 @@ int main() {
     add_exps(con, exps_lum, luma.email, 2);
     add_habs(con, habs_lum, luma.email, 3);
 
+    userT ricardo;
+    strcpy(ricardo.email, "vendraminiefamilia@gmail.com");
+    strcpy(ricardo.nome, "Ricardo");
+    strcpy(ricardo.sobrenome, "Vendramini");
+    strcpy(ricardo.foto, "ricardo.jpg");
+    strcpy(ricardo.residencia, "Sao Jose do Rio Preto");
+    strcpy(ricardo.formacao, "Engenharia Civil");
+
+    char exps_ric[2][100];
+    strcpy(exps_ric[0], "MUSICA");
+    strcpy(exps_ric[1], "PROFESSOR");
+   
+    char habs_ric[3][100];
+    strcpy(habs_ric[0], "SAXOFONE");
+    strcpy(habs_ric[1], "FLAUTA");
+    strcpy(habs_ric[2], "VIOLINO");
+
+    add_user(con, &ricardo);
+    
+    add_exps(con, exps_ric, ricardo.email, 2);
+    add_habs(con, habs_ric, ricardo.email, 3);
+
+    userT marcos;
+    strcpy(marcos.email, "marcoosrs@gmail.com");
+    strcpy(marcos.nome, "Marcos");
+    strcpy(marcos.sobrenome, "Roberto e Souza");
+    strcpy(marcos.foto, "marcos.jpg");
+    strcpy(marcos.residencia, "Santa Adelia");
+    strcpy(marcos.formacao, "Ciencia da Computacao");
+
+    char exps_mar[2][100];
+    strcpy(exps_mar[0], "CCNA EXPLORATION");
+    strcpy(exps_mar[1], "MONITORIA DE BD");
+   
+    char habs_mar[3][100];
+    strcpy(habs_mar[0], "PROCESSAMENTO E ANALISE DE IMAGENS E VIDEOS");
+    strcpy(habs_mar[1], "APRENDIZADO DE MAQUINA");
+    strcpy(habs_mar[2], "VISAO COMPUTACIONAL");
+
+    add_user(con, &marcos);
+    
+    add_exps(con, exps_mar, marcos.email, 2);
+    add_habs(con, habs_mar, marcos.email, 3);
+
     return 0;
 }
 
