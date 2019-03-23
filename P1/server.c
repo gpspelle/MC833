@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
+#include "sql/db.h"
 
 void create_socket(int client_socket) {
 
@@ -17,12 +18,62 @@ void create_socket(int client_socket) {
   
     recv(new_socket, client_message , 1024 , 0);
 
-    printf("Recebi a mensagem do cliente: [%s]\n", client_message);
+    MYSQL *con = mysql_init(NULL);
+
+    if (con == NULL) {
+        fprintf(stderr, "%s\n", mysql_error(con));
+        exit(1);
+    }
+
+    if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
+        return_error(con);
+    }
+
+    /* Select specific database for use */
+    if (mysql_query(con, "Use "DB";")) {
+        return_error(con);
+    } else {
+        printf("Succesfully using "DB"\n");
+    }
+
+    printf("Client_message: [%s]\n", client_message);
     command = strtok (client_message, ";");
     if(!strcmp(command, "listar_curso")) {
         /*listar todas as pessoas formadas em um determinado curso;*/
         char *curso = strtok (NULL, ";");
-        send(new_socket,"1", 1, 0);
+        printf("Curso: [%s]\n", curso);
+        char query[1000] = "select nome,sobrenome from Usuarios where formacao='";
+        strcat(query, curso);
+        strcat(query, "';"); 
+
+        if (mysql_query(con, query)) {
+            return_error(con);
+        } else {
+            printf("Succesfully did task number 1\n");
+        }
+
+        MYSQL_RES *result = mysql_store_result(con);
+        
+        if (result == NULL) {
+            return_error(con);
+        }
+
+        int num_fields = mysql_num_fields(result);
+        MYSQL_ROW row;
+        char buffer[1000000] = "";
+        while((row = mysql_fetch_row(result))) {
+            for(int i = 0; i < num_fields; i++) {
+                strcat(buffer, row[i]);
+                if (i != num_fields - 1) {
+                    strcat(buffer, " ");
+                }
+            }
+            strcat(buffer, "\n");
+        }
+        int len = strlen(buffer);
+        buffer[len-1] = '\0';
+        len = strlen(buffer);
+        send(new_socket, buffer, len, 0);
 
     } else if (!strcmp(command, "listar_habilidades")) {
         /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
@@ -50,6 +101,7 @@ void create_socket(int client_socket) {
         send(new_socket,"6", 1 ,0);
     }
 
+    mysql_close(con);
     close(new_socket);
 
 }

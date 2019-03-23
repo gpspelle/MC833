@@ -22,10 +22,11 @@ typedef struct user {
     char formacao[100];
 }userT;
 
-void return_error();
-void create_DBuser();
-void create_table();
-void add_exps();
-void add_habs();
-void add_user();
-void test_image();
+void return_error(MYSQL *con);
+void create_database(MYSQL *con);
+void create_DBuser(MYSQL *con);
+void create_table(MYSQL *con);
+void add_exps(MYSQL *con, char [][100], char *email, int num_exp);
+void add_habs(MYSQL *con,char [][100], char *email, int num_habs);
+void add_user(MYSQL *con, userT *u);
+void test_image(MYSQL *con);

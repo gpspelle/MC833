@@ -78,19 +78,19 @@ int main() {
 
         switch(input) {
             case 1: printf("Qual curso: ");
-                    scanf(" %s", curso); 
+                    scanf(" %[^\n]s", curso); 
                     strcpy(message, "listar_curso;");
                     strcat(message, curso);
                     client_call(message); 
                     break;
             case 2: printf("Qual cidade: ");
-                    scanf(" %s", cidade); 
+                    scanf(" %[^\n]s", cidade); 
                     strcpy(message, "listar_habilidades;");
                     strcat(message, cidade);
                     client_call(message); 
                     break;
-            case 3: printf("Qual experiencia: ")
-                    scanf(" %s", experiencia);
+            case 3: printf("Qual experiencia: ");
+                    scanf(" %[^\n]s", experiencia);
                     printf("Qual email: ");
                     scanf(" %s", email);
                     strcpy(message, "add;");
