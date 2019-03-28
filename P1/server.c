@@ -20,31 +20,36 @@ void create_socket(int client_socket) {
     printf("Recebi a mensagem do cliente: [%s]\n", client_message);
     command = strtok (client_message, ";");
     if(!strcmp(command, "listar_curso")) {
-        /*(1) listar todas as pessoas formadas em um determinado curso;*/
+        /*listar todas as pessoas formadas em um determinado curso;*/
         char *curso = strtok (NULL, ";");
+        send(new_socket,"1", 1, 0);
 
     } else if (!strcmp(command, "listar_habilidades")) {
         /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
         char *cidade = strtok (NULL, ";");
+        send(new_socket,"2", 1 ,0);
 
     } else if (!strcmp(command, "add")) {
         /*acrescentar uma nova experiência em um perfil;*/
         char *experiencia = strtok (NULL, ";");
         char *email = strtok(NULL, ";") ;
+        send(new_socket,"3", 1 ,0);
 
     } else if (!strcmp(command, "email_experiencia")) {
         /*dado o email do perfil, retornar sua experiência;*/
         char *email = strtok (NULL, ";");
+        send(new_socket,"4", 1 ,0);
 
     } else if (!strcmp(command, "listar_tudo")) {
         /*listar todas as informações de todos os perfis;*/
+        send(new_socket,"5", 1 ,0);
 
     } else if (!strcmp(command, "email_tudo")) {
         /*dado o email de um perfil, retornar suas informações*/
         char *email = strtok (NULL, ";");
+        send(new_socket,"6", 1 ,0);
     }
 
-    send(new_socket,".", 1 ,0);
     close(new_socket);
 
 }
