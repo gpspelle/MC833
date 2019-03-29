@@ -1,58 +1,72 @@
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h> 
-#include <fcntl.h> 
+#include "net.h"
+
+// get sockaddr, IPv4 or IPv6:
+void *get_in_addr(struct sockaddr *sa)
+{
+	if (sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in*)sa)->sin_addr);
+	}
+
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
 
 void client_call(char *input) {
 
-    char message[1024];
-    char buffer[1024];
-    int client_socket;
-    struct sockaddr_in server_address;
-    socklen_t addr_size;
-    
-    // Create the socket. 
-    client_socket = socket(PF_INET, SOCK_STREAM, 0);
+    int sockfd, numbytes;  
+    char buf[MAX_DATA_SIZE];
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
+    char s[INET6_ADDRSTRLEN];
 
-    //Configure settings of the server address
-    // Address family is Internet 
-    server_address.sin_family = AF_INET;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-    //Set port number, using htons function 
-    server_address.sin_port = htons(10000);
-
-    //Set IP address to localhost
-    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    memset(server_address.sin_zero, '\0', sizeof(server_address.sin_zero));
-
-    //Connect the socket to the server using the address
-    addr_size = sizeof(server_address);
-
-    connect(client_socket, (struct sockaddr *) &server_address, addr_size);
-
-    strcpy(message, input);
-
-    printf("[%s]\n", message);
-
-    if(send(client_socket , message , 1024 , 0) < 0) {
-        /* Something went wrong while sending our message */
-        printf("ERROR: SEND PROBLEM\n");
+    if ((rv = getaddrinfo("luma", PORT, &hints, &servinfo)) != 0) {
+            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+            return;
     }
 
-    //Read the message from the server into the buffer
-    if(recv(client_socket, buffer, 1024, 0) < 0) {
-       /* Something went wrong while receiving a response message */
-       printf("ERROR: RECEIVE PROBLEM\n");
+    // loop through all the results and connect to the first we can
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                        p->ai_protocol)) == -1) {
+            perror("client: socket");
+            continue;
+        }
+
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+            perror("client: connect");
+            close(sockfd);
+            continue;
+        }
+
+        break;
     }
 
-    //Print the received message
-    printf("[%s]\n",buffer);
-    close(client_socket);
+    if (p == NULL) {
+        fprintf(stderr, "client: failed to connect\n");
+        return;
+    }
+
+    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
+                    s, sizeof s);
+    printf("client: connecting to %s\n", s);
+
+    freeaddrinfo(servinfo); // all done with this structure
+
+    if (send(sockfd, input, MAX_DATA_SIZE-1, 0) == -1) {
+        perror("send");
+        exit(1);
+    }   
+
+    while((numbytes = read(sockfd, buf, MAX_DATA_SIZE-1)) < 0);
+    buf[numbytes] = '\0';
+
+    printf("[%s]\n", buf);
+
+    close(sockfd);
 
 }
 

@@ -192,7 +192,7 @@ void add_user(MYSQL *con, userT *u, char *cwd) {
     }
 
     char data[flen+1];
-    int size = fread(data, 1, flen, fp);
+    fread(data, 1, flen, fp);
                     
     if (ferror(fp)) {
         fprintf(stderr, "fread() failed\n");
