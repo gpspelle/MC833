@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <mysql.h>
 
 #define rootDB "root"
@@ -28,5 +29,5 @@ void create_DBuser(MYSQL *con);
 void create_table(MYSQL *con);
 void add_exps(MYSQL *con, char [][100], char *email, int num_exp);
 void add_habs(MYSQL *con,char [][100], char *email, int num_habs);
-void add_user(MYSQL *con, userT *u);
+void add_user(MYSQL *con, userT *u, char *cwd);
 void test_image(MYSQL *con);
