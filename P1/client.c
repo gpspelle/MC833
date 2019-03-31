@@ -23,7 +23,9 @@ void client_call(char *input, int num_input) {
     int sockfd;
     long int numbytes = -1;  
     char buf[MAX_DATA_SIZE];
+    char buf1[MAX_DATA_SIZE];
     char *image;
+    char *image1;
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -32,10 +34,6 @@ void client_call(char *input, int num_input) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    /*if ((rv = getaddrinfo("luma", PORT, &hints, &servinfo)) != 0) {
-            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-            return;
-    }*/
     if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             return;
@@ -74,8 +72,11 @@ void client_call(char *input, int num_input) {
         exit(1);
     }   
 
-    while((numbytes = read(sockfd, buf, MAX_DATA_SIZE)) < 0);
-    buf[numbytes-1] = '\0';
+    while((numbytes = read(sockfd, buf1, MAX_DATA_SIZE)) != 0) {
+        strcat(buf, buf1); 
+    }
+
+    buf[strlen(buf)-1] = '\0';
     printf("[%s]\n", buf);
     numbytes = -1;
 
@@ -98,8 +99,11 @@ void client_call(char *input, int num_input) {
         while((numbytes = read(sockfd, a, 100)) < 0);
         numbytes = atoi(a);
         image = malloc(sizeof(char)*(numbytes+1));
+        image1 = malloc(sizeof(char)*(numbytes+1));
         int x;
-        while((x = read(sockfd, image, (numbytes+1))) < 0);
+        while((x = read(sockfd, image, (numbytes+1))) != 0) {
+            strcat(image, image1);
+        }
         fwrite(image, 1, numbytes, fp);
     }
 

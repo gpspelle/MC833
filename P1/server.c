@@ -612,15 +612,15 @@ int main() {
             switch(r) {
                 case 0: printf("ENTRADA INVALIDA\n"); break;
                 case 1: printf("SUCESSO\n"); 
-                        write(new_fd, buffer, BUFF_SIZE);
+                        printf("VALOR DE WRITE %d\n", write(new_fd, buffer, BUFF_SIZE));
                         exit(1);
                         break;
                 default: printf("SUCESSO\n");
-                        write(new_fd, buffer, BUFF_SIZE);
+                        printf("VALOR DE WRITE: %d\n", write(new_fd, buffer, BUFF_SIZE));
                         char a[20];
                         sprintf(a, "%ld", r);
-                        write(new_fd, a, 100);
-                        write(new_fd, image, r);
+                        printf("VALOR DE WRITE: %d\n", write(new_fd, a, 100));
+                        printf("VALOR DE WRITE: %d\n", write(new_fd, image, r));
                         exit(1);
                         break;   
     
