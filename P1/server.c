@@ -233,7 +233,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                     while((row_ = mysql_fetch_row(result_))) {
                         for(int j = 0; j < num_fields_; j++) {
                             if(counter != 1) {
-                                strcat(buffer, "\t     ");
+                                strcat(buffer, "\t      ");
                             }
                             strcat(buffer, "(");
                             sprintf(a, "%d", counter);
@@ -246,8 +246,6 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                     }
                 }
             }
-
-            return 0;
 
         } else if (!strcmp(command, "listar_tudo")) {
             /*listar todas as informações de todos os perfis;*/

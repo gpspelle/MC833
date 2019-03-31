@@ -78,7 +78,6 @@ void client_call(char *input, int num_input) {
     while(1) {
         char kkey0[1];
         numbytes = read(sockfd, kkey0, 1); 
-        printf("lido: %s %s\n", kkey0, a);
 
         if(*kkey0 == '@') {
             break;
@@ -112,7 +111,6 @@ void client_call(char *input, int num_input) {
             char kkey1[1];
             numbytes = read(sockfd, kkey1, 1); 
             kkey1[1] = '\0';
-            printf("lido: %s %s\n", kkey1, b);
 
             if(*kkey1 == '@') {
                 break;
@@ -125,7 +123,6 @@ void client_call(char *input, int num_input) {
         image = malloc(sizeof(char)*(numbytes+1));
         int x;
         while((x = read(sockfd, image, numbytes)) < 0);
-        printf("Quantidade de bytes lido para a imagem: %d\n", x);
         fwrite(image, 1, numbytes, fp);
     }
 
