@@ -17,6 +17,7 @@
 #define BACKLOG 20   // how many pending connections queue will hold
 #define MAX_DATA_SIZE 10240 // max number of bytes we can get at once 
 #define BUFF_SIZE 10240
+#define WR_SIZE 1024
 
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]);
 void *get_in_addr(struct sockaddr *sa);

@@ -22,10 +22,10 @@ void client_call(char *input, int num_input) {
 
     int sockfd;
     long int numbytes = -1;  
-    char buf[MAX_DATA_SIZE];
-    char buf1[MAX_DATA_SIZE];
+    char buf[MAX_DATA_SIZE] = "";
+    char buf1[MAX_DATA_SIZE] = "";
     char *image;
-    char *image1;
+    //char *image1;
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -72,10 +72,23 @@ void client_call(char *input, int num_input) {
         exit(1);
     }   
 
-    while((numbytes = read(sockfd, buf1, MAX_DATA_SIZE)) != 0) {
-        strcat(buf, buf1); 
+    char a[20] = "";
+    char b[20] = "";
+
+    while(1) {
+        char kkey0[1];
+        numbytes = read(sockfd, kkey0, 1); 
+        printf("lido: %s %s\n", kkey0, a);
+
+        if(*kkey0 == '@') {
+            break;
+        }
+        strcat(a, kkey0);
     }
 
+    numbytes = atoi(a);
+    int k;
+    while((k = read(sockfd, buf, numbytes)) < 0);
     buf[strlen(buf)-1] = '\0';
     printf("[%s]\n", buf);
     numbytes = -1;
@@ -94,16 +107,25 @@ void client_call(char *input, int num_input) {
         }
 
         FILE *fp = fopen(path, "wb");
-        char a[20];
 
-        while((numbytes = read(sockfd, a, 100)) < 0);
-        numbytes = atoi(a);
-        image = malloc(sizeof(char)*(numbytes+1));
-        image1 = malloc(sizeof(char)*(numbytes+1));
-        int x;
-        while((x = read(sockfd, image, (numbytes+1))) != 0) {
-            strcat(image, image1);
+        while(1) {
+            char kkey1[1];
+            numbytes = read(sockfd, kkey1, 1); 
+            kkey1[1] = '\0';
+            printf("lido: %s %s\n", kkey1, b);
+
+            if(*kkey1 == '@') {
+                break;
+            }
+            strcat(b, kkey1);
         }
+
+        printf("[%s] - strlen: %d\n", b, strlen(b));
+        numbytes = atoi(b);
+        image = malloc(sizeof(char)*(numbytes+1));
+        int x;
+        while((x = read(sockfd, image, numbytes)) < 0);
+        printf("Quantidade de bytes lido para a imagem: %d\n", x);
         fwrite(image, 1, numbytes, fp);
     }
 
@@ -163,8 +185,11 @@ int main() {
                     strcpy(message, "email_tudo;");
                     strcat(message, email);
                     break;
+            default:
+                    exit(1);
         }
 
+        printf("[%s]\n", message);
         client_call(message, input);
     }
 
