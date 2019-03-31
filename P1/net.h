@@ -11,12 +11,13 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <strings.h>
+#include <time.h>
 
 #define PORT "7904"  // the port users will be connecting to
-#define BACKLOG 10   // how many pending connections queue will hold
+#define BACKLOG 20   // how many pending connections queue will hold
 #define MAX_DATA_SIZE 10240 // max number of bytes we can get at once 
 #define BUFF_SIZE 10240
 
-int treat_call(char client_message[BUFF_SIZE], char buffer[100000]);
+long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]);
 void *get_in_addr(struct sockaddr *sa);
 void sigchld_handler(int s);

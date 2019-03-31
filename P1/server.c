@@ -22,7 +22,15 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
+void get_time() {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    char buff[100];
+    strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
+    printf("Current time: %s.%09ld UTC\n", buff, ts.tv_nsec);
+}
+
+long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]) {
 
     char *command;
   
@@ -79,8 +87,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
             }
             strcat(buffer, "\n");
         }
-
-        return 1;
 
     } else if (!strcmp(command, "listar_habilidades")) {
         /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
@@ -139,8 +145,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
             }
         }
 
-        return 1;
-
     } else if (!strcmp(command, "add")) {
         /*acrescentar uma nova experiência em um perfil, dado o email;*/
         char *experiencia = strtok (NULL, ";");
@@ -180,7 +184,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
         }
        
         strcpy(buffer, "Successfully added new exp to specific an user"); 
-        return 0;
 
     } else if (!strcmp(command, "email_experiencia")) {
         /*dado o email do perfil, retornar sua experiência;*/
@@ -351,8 +354,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
             
         }
 
-        return 0;
-
     } else if (!strcmp(command, "email_tudo")) {
         /*dado o email de um perfil, retornar suas informações*/
         char *email = strtok (NULL, ";");
@@ -374,6 +375,7 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
         }
 
         int num_fields = mysql_num_fields(result);
+        long int flen = 0;
         MYSQL_ROW row;
         while((row = mysql_fetch_row(result))) {
             for(int i = 1; i < num_fields; i++) {
@@ -381,7 +383,53 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
                     case 1: strcat(buffer, "Email: ") ; break;
                     case 2: strcat(buffer, "Nome: "); break;
                     case 3: strcat(buffer, "Sobrenome: "); break;
-                    case 4: strcat(buffer, "Foto: "); break;
+                    case 4: strcat(buffer, "Foto: "); 
+                            FILE *fp = fopen(row[i], "rb");
+                            if (fp == NULL) {
+                                fprintf(stderr, "cannot open image file %s\n", row[i]);    
+                                exit(1);
+                            }
+
+                            fseek(fp, 0, SEEK_END);
+                              
+                            if (ferror(fp)) {
+                                        
+                                fprintf(stderr, "fseek() failed\n");
+                                int r = fclose(fp);
+
+                                if (r == EOF) {
+                                    fprintf(stderr, "cannot close file handler\n");          
+                                }    
+                                                          
+                                exit(1);
+                            }  
+                                
+                            flen = ftell(fp);
+                                  
+                            if (flen == -1) {
+                                            
+                                perror("error occurred");
+                                int r = fclose(fp);
+
+                                if (r == EOF) {
+                                    fprintf(stderr, "cannot close file handler\n");
+                                }
+                                exit(1);      
+                            }
+                                    
+                            fseek(fp, 0, SEEK_SET);
+                                      
+                            if (ferror(fp)) {
+                                fprintf(stderr, "fseek() failed\n");
+                                int r = fclose(fp);
+                                if (r == EOF) {
+                                    fprintf(stderr, "cannot close file handler\n");
+                                }                                  
+                                exit(1);
+                            }
+                            fread(image, 1, flen, fp);
+                            image[flen+1] = '\0';
+                            break;
                     case 5: strcat(buffer, "Residencia "); break;
                     case 6: strcat(buffer, "Formacao: "); break;
                 }
@@ -458,6 +506,9 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
                 }
                 counter += 1;
             }
+            
+            mysql_close(con);
+            return flen;
         }
     } else {
         mysql_close(con);
@@ -551,12 +602,29 @@ int main() {
         if (!fork()) { // this is the child process
             close(sockfd);
             char client_message[BUFF_SIZE];
-            char buffer[100000];
-            read(new_fd, client_message, sizeof(client_message));
+            char buffer[BUFF_SIZE];
+            char image[100000];
+            read(new_fd, client_message, BUFF_SIZE);
             printf("[%s]\n", client_message);
-	    int r = treat_call(client_message, buffer);
-            write(new_fd, buffer, sizeof(buffer));
-            exit(1);
+	    long int r = treat_call(client_message, buffer, image);
+            long int numbytes = -1;
+
+            switch(r) {
+                case 0: printf("ENTRADA INVALIDA\n"); break;
+                case 1: printf("SUCESSO\n"); 
+                        write(new_fd, buffer, BUFF_SIZE);
+                        exit(1);
+                        break;
+                default: printf("SUCESSO\n");
+                        write(new_fd, buffer, BUFF_SIZE);
+                        char a[20];
+                        sprintf(a, "%ld", r);
+                        write(new_fd, a, 100);
+                        write(new_fd, image, r);
+                        exit(1);
+                        break;   
+    
+            }
         }
         close(new_fd);
     } 
