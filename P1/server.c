@@ -125,6 +125,7 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
                 MYSQL_ROW row_;
 
                 int entrei = 0;
+                strcat(buffer, "Habilidades: ");
                 while((row_ = mysql_fetch_row(result_))) {
                     if(entrei) {
                         strcat(buffer, ", ");
@@ -225,13 +226,11 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
 
                 int counter = 1;
                 char a[3];
-                strcat(buffer, "Experiencia:");
+                strcat(buffer, "Experiencia: ");
                 while((row_ = mysql_fetch_row(result_))) {
                     for(int j = 0; j < num_fields_; j++) {
-                        if(counter == 1) {
-                            strcat(buffer, "\t");
-                        } else {
-                            strcat(buffer, "\t \t");
+                        if(counter != 1) {
+                            strcat(buffer, "\t     ");
                         }
                         strcat(buffer, "(");
                         sprintf(a, "%d", counter);
@@ -303,6 +302,7 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
             MYSQL_ROW row_;
 
             int entrei = 0;
+            strcat(buffer, "Habilidades: ");
             while((row_ = mysql_fetch_row(result_))) {
                 if(entrei) {
                     strcat(buffer, ", ");
@@ -333,13 +333,11 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
             
             int counter = 1;
             char a[3];
-            strcat(buffer, "Experiencia:");
+            strcat(buffer, "Experiencia: ");
             while((row__ = mysql_fetch_row(result__))) {
                 for(int j = 0; j < num_fields__; j++) {
-                    if(counter == 1) {
-                        strcat(buffer, "\t");
-                    } else {
-                        strcat(buffer, "\t \t");
+                    if(counter != 1) {
+                        strcat(buffer, "\t     ");
                     }
                     strcat(buffer, "(");
                     sprintf(a, "%d", counter);
@@ -377,29 +375,97 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
 
         int num_fields = mysql_num_fields(result);
         MYSQL_ROW row;
-        //char buffer[1000000] = "";
         while((row = mysql_fetch_row(result))) {
-            for(int i = 0; i < num_fields; i++) {
+            for(int i = 1; i < num_fields; i++) {
+                switch(i) {
+                    case 1: strcat(buffer, "Email: ") ; break;
+                    case 2: strcat(buffer, "Nome: "); break;
+                    case 3: strcat(buffer, "Sobrenome: "); break;
+                    case 4: strcat(buffer, "Foto: "); break;
+                    case 5: strcat(buffer, "Residencia "); break;
+                    case 6: strcat(buffer, "Formacao: "); break;
+                }
                 strcat(buffer, row[i]);
-                if (i != num_fields - 1) {
+
+                if(i != 2) {
+                    strcat(buffer, "\n");
+                } else {
                     strcat(buffer, " ");
                 }
             }
+
+            char query_[1000] = "select hab from "tabelaHAB" where Personid='";
+            strcat(query_, row[0]);
+            strcat(query_, "';");
+
+            if (mysql_query(con, query_)) {
+                return_error(con);
+            }
+
+            MYSQL_RES *result_ = mysql_store_result(con);
+    
+            if (result_ == NULL) {
+                return_error(con);
+            }
+
+            int num_fields_ = mysql_num_fields(result_);
+            MYSQL_ROW row_;
+
+            int entrei = 0;
+            strcat(buffer, "Habilidades: ");
+            while((row_ = mysql_fetch_row(result_))) {
+                if(entrei) {
+                    strcat(buffer, ", ");
+                }
+                entrei = 1;
+                for(int j = 0; j < num_fields_; j++) {
+                    strcat(buffer, row_[j]); 
+                }
+            }
+
             strcat(buffer, "\n");
+            char query__[1000] = "select exp from "tabelaEXP" where Personid='";
+            strcat(query__, row[0]);
+            strcat(query__, "';");
+
+            if (mysql_query(con, query__)) {
+                return_error(con);
+            }
+
+            MYSQL_RES *result__ = mysql_store_result(con);
+    
+            if (result__ == NULL) {
+                return_error(con);
+            }
+
+            int num_fields__ = mysql_num_fields(result__);
+            MYSQL_ROW row__;
+            
+            int counter = 1;
+            char a[3];
+            strcat(buffer, "Experiencia: ");
+            while((row__ = mysql_fetch_row(result__))) {
+                for(int j = 0; j < num_fields__; j++) {
+                    if(counter != 1) {
+                        strcat(buffer, "\t     ");
+                    }
+                    strcat(buffer, "(");
+                    sprintf(a, "%d", counter);
+                    strcat(buffer, a);
+                    strcat(buffer, ") ");
+                    strcat(buffer, row__[j]); 
+                    strcat(buffer, "\n");
+                }
+                counter += 1;
+            }
         }
-        //int len = strlen(buffer);
-        //buffer[len-1] = '\0';
-        //len = strlen(buffer);
-        //send(new_socket, buffer, len, 0);
     } else {
         mysql_close(con);
-        //close(new_socket);
         return 0;
         
     }
 
     mysql_close(con);
-    //close(new_socket);
     return 1;
 }
 

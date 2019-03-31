@@ -124,7 +124,7 @@ int main() {
                     break;
             case 6: printf("Qual email: ");
                     scanf(" %s", email);
-                    strcpy(message, "email_tudo");
+                    strcpy(message, "email_tudo;");
                     strcat(message, email);
                     client_call(message);
                     break;
