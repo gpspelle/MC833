@@ -67,22 +67,20 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
 
         int num_fields = mysql_num_fields(result);
         MYSQL_ROW row;
-        //char buffer[1000000] = "";
         while((row = mysql_fetch_row(result))) {
             for(int i = 0; i < num_fields; i++) {
-                strcat(buffer, row[i]);
-                if (i != num_fields - 1) {
-                    strcat(buffer, " ");
+                if(i == 0) {
+                    strcat(buffer, "Nome: ");
+                } else {
+                    strcat(buffer, " Sobrenome: ");
                 }
+
+                strcat(buffer, row[i]);
             }
             strcat(buffer, "\n");
         }
 
         return 1;
-        //int len = strlen(buffer);
-        //buffer[len-1] = '\0';
-        //len = strlen(buffer);
-        //send(new_socket, buffer, len, 0);
 
     } else if (!strcmp(command, "listar_habilidades")) {
         /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
@@ -106,7 +104,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
         int num_fields = mysql_num_fields(result);
         MYSQL_ROW row;
 
-        //char buffer[1000000] = "";
         while((row = mysql_fetch_row(result))) {
             for(int i = 0; i < num_fields; i++) {
                 
@@ -127,20 +124,21 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
                 int num_fields_ = mysql_num_fields(result_);
                 MYSQL_ROW row_;
 
+                int entrei = 0;
                 while((row_ = mysql_fetch_row(result_))) {
+                    if(entrei) {
+                        strcat(buffer, ", ");
+                    }
+                    entrei = 1;
                     for(int j = 0; j < num_fields_; j++) {
                         strcat(buffer, row_[j]); 
-                        strcat(buffer, "\n");
                     }
                 }
+                strcat(buffer, "\n");
             }
         }
 
         return 1;
-        //int len = strlen(buffer);
-        //buffer[len-1] = '\0';
-        //len = strlen(buffer);
-        //send(new_socket, buffer, len, 0);
 
     } else if (!strcmp(command, "add")) {
         /*acrescentar uma nova experiência em um perfil, dado o email;*/
@@ -170,7 +168,7 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
            for(int i = 0; i < num_fields; i++) {
                 char query_[10000] = "insert into "tabelaEXP" (Personid, exp) VALUES(";
                 strcat(query_, row[i]);
-                strcat(query_, "', '"); 
+                strcat(query_, ", '"); 
                 strcat(query_, experiencia);
                 strcat(query_, "');");
                 printf("Query: [%s]\n", query_);
@@ -182,8 +180,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
        
         strcpy(buffer, "Successfully added new exp to specific an user"); 
         return 0;
-        //char message[1000] = "Successfully added new exp to specific an user";
-        //send(new_socket, message, strlen(message), 0);
 
     } else if (!strcmp(command, "email_experiencia")) {
         /*dado o email do perfil, retornar sua experiência;*/
@@ -207,7 +203,6 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
         int num_fields = mysql_num_fields(result);
         MYSQL_ROW row;
 
-        //char buffer[1000000] = "";
         while((row = mysql_fetch_row(result))) {
             for(int i = 0; i < num_fields; i++) {
                 
@@ -228,20 +223,29 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
                 int num_fields_ = mysql_num_fields(result_);
                 MYSQL_ROW row_;
 
+                int counter = 1;
+                char a[3];
+                strcat(buffer, "Experiencia:");
                 while((row_ = mysql_fetch_row(result_))) {
                     for(int j = 0; j < num_fields_; j++) {
+                        if(counter == 1) {
+                            strcat(buffer, "\t");
+                        } else {
+                            strcat(buffer, "\t \t");
+                        }
+                        strcat(buffer, "(");
+                        sprintf(a, "%d", counter);
+                        strcat(buffer, a);
+                        strcat(buffer, ") ");
                         strcat(buffer, row_[j]); 
                         strcat(buffer, "\n");
                     }
+                    counter += 1;
                 }
             }
         }
 
         return 0;
-        //int len = strlen(buffer);
-        //buffer[len-1] = '\0';
-        //len = strlen(buffer);
-        //send(new_socket, buffer, len, 0);
 
     } else if (!strcmp(command, "listar_tudo")) {
         /*listar todas as informações de todos os perfis;*/
@@ -262,69 +266,94 @@ int treat_call(char client_message[BUFF_SIZE], char buffer[100000]) {
 
         int num_fields = mysql_num_fields(result);
         MYSQL_ROW row;
-        //char buffer[10000000] = "";
 
         while((row = mysql_fetch_row(result))) {
             for(int i = 1; i < num_fields; i++) {
+                switch(i) {
+                    case 1: strcat(buffer, "Email: ") ; break;
+                    case 2: strcat(buffer, "Nome: "); break;
+                    case 3: strcat(buffer, "Sobrenome: "); break;
+                    case 4: strcat(buffer, "Foto: "); break;
+                    case 5: strcat(buffer, "Residencia "); break;
+                    case 6: strcat(buffer, "Formacao: "); break;
+                }
                 strcat(buffer, row[i]);
-                strcat(buffer, "\n");
-
-                char query_[1000] = "select hab from "tabelaHAB" where Personid='";
-                strcat(query_, row[0]);
-                strcat(query_, "';");
-
-                if (mysql_query(con, query_)) {
-                    return_error(con);
-                }
-
-                MYSQL_RES *result_ = mysql_store_result(con);
-        
-                if (result_ == NULL) {
-                    return_error(con);
-                }
-
-                int num_fields_ = mysql_num_fields(result_);
-                MYSQL_ROW row_;
-
-                while((row_ = mysql_fetch_row(result_))) {
-                    for(int j = 0; j < num_fields_; j++) {
-                        strcat(buffer, row_[j]); 
-                        if(j != num_fields_ -1)
-                            strcat(buffer, ", ");
-                    }
-                }
-
-                char query__[1000] = "select exp from "tabelaEXP" where Personid='";
-                strcat(query__, row[0]);
-                strcat(query__, "';");
-
-                if (mysql_query(con, query__)) {
-                    return_error(con);
-                }
-
-                MYSQL_RES *result__ = mysql_store_result(con);
-        
-                if (result__ == NULL) {
-                    return_error(con);
-                }
-
-                int num_fields__ = mysql_num_fields(result__);
-                MYSQL_ROW row__;
-
-                while((row__ = mysql_fetch_row(result__))) {
-                    for(int j = 0; j < num_fields__; j++) {
-                        strcat(buffer, row__[j]); 
-                        strcat(buffer, "\n");
-                    }
+                
+                if(i != 2) {
+                    strcat(buffer, "\n");
+                } else {
+                    strcat(buffer, " ");
                 }
             }
+            char query_[1000] = "select hab from "tabelaHAB" where Personid='";
+            strcat(query_, row[0]);
+            strcat(query_, "';");
+
+            if (mysql_query(con, query_)) {
+                return_error(con);
+            }
+
+            MYSQL_RES *result_ = mysql_store_result(con);
+    
+            if (result_ == NULL) {
+                return_error(con);
+            }
+
+            int num_fields_ = mysql_num_fields(result_);
+            MYSQL_ROW row_;
+
+            int entrei = 0;
+            while((row_ = mysql_fetch_row(result_))) {
+                if(entrei) {
+                    strcat(buffer, ", ");
+                }
+                entrei = 1;
+                for(int j = 0; j < num_fields_; j++) {
+                    strcat(buffer, row_[j]); 
+                }
+            }
+
+            strcat(buffer, "\n");
+            char query__[1000] = "select exp from "tabelaEXP" where Personid='";
+            strcat(query__, row[0]);
+            strcat(query__, "';");
+
+            if (mysql_query(con, query__)) {
+                return_error(con);
+            }
+
+            MYSQL_RES *result__ = mysql_store_result(con);
+    
+            if (result__ == NULL) {
+                return_error(con);
+            }
+
+            int num_fields__ = mysql_num_fields(result__);
+            MYSQL_ROW row__;
+            
+            int counter = 1;
+            char a[3];
+            strcat(buffer, "Experiencia:");
+            while((row__ = mysql_fetch_row(result__))) {
+                for(int j = 0; j < num_fields__; j++) {
+                    if(counter == 1) {
+                        strcat(buffer, "\t");
+                    } else {
+                        strcat(buffer, "\t \t");
+                    }
+                    strcat(buffer, "(");
+                    sprintf(a, "%d", counter);
+                    strcat(buffer, a);
+                    strcat(buffer, ") ");
+                    strcat(buffer, row__[j]); 
+                    strcat(buffer, "\n");
+                }
+                counter += 1;
+            }
+            
         }
 
         return 0;
-        //int len = strlen(buffer);
-        //buffer[len-1] = '\0';
-        //len = strlen(buffer);
-        //send(new_socket, buffer, len, 0);
 
     } else if (!strcmp(command, "email_tudo")) {
         /*dado o email de um perfil, retornar suas informações*/

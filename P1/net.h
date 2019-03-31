@@ -14,8 +14,8 @@
 
 #define PORT "7904"  // the port users will be connecting to
 #define BACKLOG 10   // how many pending connections queue will hold
-#define MAX_DATA_SIZE 1024 // max number of bytes we can get at once 
-#define BUFF_SIZE 1024
+#define MAX_DATA_SIZE 10240 // max number of bytes we can get at once 
+#define BUFF_SIZE 10240
 
 int treat_call(char client_message[BUFF_SIZE], char buffer[100000]);
 void *get_in_addr(struct sockaddr *sa);
