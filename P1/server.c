@@ -628,9 +628,15 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                                 } while((written == -1) && (errno == EINTR));
 
                                 if (written == -1) {
-                                    /* Real error. Do something appropriate. */
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_t_write != bytes_written) {
+                                    /* Todo: send error message to server and ask for retransmit */
                                     break;
                                 }
+
                                 bytes_written += written;
                             } 
 
@@ -650,9 +656,15 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                                 } while((written == -1) && (errno == EINTR));
 
                                 if (written == -1) {
-                                    /* Real error. Do something appropriate. */
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_t_write != bytes_written) {
+                                    /* Todo: send error message to server and ask for retransmit */
                                     break;
                                 }
+
                                 bytes_written += written;
                             }
 

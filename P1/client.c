@@ -15,7 +15,7 @@ void get_time() {
     timespec_get(&ts, TIME_UTC);
     char buff[100];
     strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    printf("Current time: %s.%09ld UTC\n", buff, ts.tv_nsec);
+    printf("%s.%09ld;", buff, ts.tv_nsec);
 }
 
 void client_call(char *input, int num_input) {
@@ -170,8 +170,15 @@ void client_call(char *input, int num_input) {
             } while((writtenThisTime == -1) && (errno == EINTR));
 
             if (writtenThisTime == -1) {
+                struct timespec ts;
+                ts.tv_sec = 0;
+                ts.tv_nsec = 100;
+                nanosleep(&ts, NULL);
+            } else if(writtenThisTime == 0 && bytesToWrite != bytesWritten) {
+                /* Todo: send error message to server and ask for retransmit */
                 break;
             }
+
             bytesWritten += writtenThisTime;
         }
 
@@ -239,7 +246,10 @@ int main() {
         }
 
         printf("[%s]\n", message);
+        get_time();
         client_call(message, input);
+        get_time();
+        printf("\n");
     }
 
     return 0;
