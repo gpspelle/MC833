@@ -604,7 +604,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                 char client_message[BUFF_SIZE] = "";
                 char buffer[BUFF_SIZE] = "";
                 char image[100000] = "";
-                read(new_fd, client_message, BUFF_SIZE);
+                recv(new_fd, client_message, BUFF_SIZE, 0);
                 printf("[%s]\n", client_message);
                 long int r = treat_call(client_message, buffer, image);
                 long int numbytes = -1;
@@ -619,14 +619,15 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                     case 1: printf("SUCESSO\n"); 
                             sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, a, strlen(a)));
+                            printf("VALOR DE WRITE: %d\n", send(new_fd, a, strlen(a), 0));
                             bytes_to_write = strlen(buffer);
 
+                            get_time();
                             while (bytes_written - bytes_to_write != 0) {
                                 size_t written;
 
                                 do {
-                                    written = write(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written));
+                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
                                 if (written == -1) {
@@ -641,20 +642,22 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
 
                                 bytes_written += written;
                             } 
+                            get_time();
+                            printf("############BYTES WRITTEN: %d###########3\n", bytes_written);
 
                             exit(1);
                             break;
                     default: printf("SUCESSO\n");
                             sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, a, strlen(a)));
+                            printf("VALOR DE WRITE: %d\n", send(new_fd, a, strlen(a), 0));
                             bytes_to_write = strlen(buffer);
 
                             while (bytes_written != bytes_to_write) {
                                 size_t written;
 
                                 do {
-                                    written = write(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written));
+                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
                                 if (written == -1) {
@@ -669,10 +672,11 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
 
                                 bytes_written += written;
                             }
+                            printf("############BYTES WRITTEN: %d###########3\n", bytes_written);
 
                             sprintf(b, "%ld", r);
                             strcat(b, arroba); 
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, b, strlen(b)));
+                            printf("VALOR DE WRITE: %d\n", send(new_fd, b, strlen(b), 0));
                             
                             bytes_written = 0;
                             bytes_to_write = r;
@@ -681,7 +685,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                                 size_t written;
 
                                 do {
-                                    written = write(new_fd, image + bytes_written, (bytes_to_write - bytes_written));
+                                    written = send(new_fd, image + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
                                 if (written == -1) {
@@ -696,7 +700,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
     
             }
         }
-        close(new_fd);
+        //close(new_fd);
     } 
 
     return 0;
