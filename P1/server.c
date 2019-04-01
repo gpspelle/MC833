@@ -598,107 +598,182 @@ int main() {
                 get_in_addr((struct sockaddr *)&their_addr),
                 s, sizeof s);
         printf("server: got connection from %s\n", s);
+        int exit_ = 0;
 
-        if (!fork()) { // this is the child process
+        if (!fork()) { // this is the child process, used for child
             close(sockfd);
-            char client_message[BUFF_SIZE] = "";
-            char buffer[BUFF_SIZE] = "";
-            char image[100000] = "";
-            recv(new_fd, client_message, BUFF_SIZE, 0);
-            printf("[%s]\n", client_message);
-            long int r = treat_call(client_message, buffer, image);
-            long int numbytes = -1;
-            char a[20] = "";
-            char b[20] = "";
-            char *arroba = "@";
-            size_t bytes_written = 0;
-            size_t bytes_to_write = 0;
+            while(!exit_) { //client loop
+                char client_message[BUFF_SIZE] = "";
+                char buffer[BUFF_SIZE] = "";
+                char image[100000] = "";
+                while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
+                printf("[%s]\n", client_message);
+                long int r = treat_call(client_message, buffer, image);
+                long int numbytes = -1;
+                char a[20] = "";
+                char b[20] = "";
+                char *arroba = "@";
+                size_t bytes_written = 0;
+                size_t bytes_to_write = 0;
 
-            switch(r) {
-                case 0: printf("ENTRADA INVALIDA\n"); break;
-                case 1: printf("SUCESSO\n"); 
-                        sprintf(a, "%ld", strlen(buffer));
-                        strcat(a, arroba);
-                        printf("VALOR DE WRITE: %d\n", send(new_fd, a, strlen(a), 0));
-                        bytes_to_write = strlen(buffer);
+                switch(r) {
+                    case 0: printf("ENTRADA INVALIDA\n"); 
+                            exit_ = 1;
+                            break;
+                    case 1: printf("SUCESSO\n"); 
+                            sprintf(a, "%ld", strlen(buffer));
+                            strcat(a, arroba);
 
-                        get_time();
-                        while (bytes_written - bytes_to_write != 0) {
-                            size_t written;
+                            bytes_to_write = strlen(a);
 
-                            do {
-                                written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
-                            } while((written == -1) && (errno == EINTR));
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
 
-                            if (written == -1) {
-                                struct timespec ts;
-                                ts.tv_sec = 0;
-                                ts.tv_nsec = 100;
-                                nanosleep(&ts, NULL);
-                            } else if(written == 0 && bytes_to_write != bytes_written) {
-                                /* Todo: send error message to server and ask for retransmit */
-                                break;
+                                do {
+                                    written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                /*if (written == -1) {
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_to_write != bytes_written) {
+                                    break;
+                                }*/
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
+                            } 
+
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+                            bytes_written = 0;
+                            bytes_to_write = strlen(buffer);
+
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                /*if (written == -1) {
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_to_write != bytes_written) {
+                                    break;
+                                }*/
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
+                            } 
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+                            break;
+                    default: printf("SUCESSO\n");
+                            sprintf(a, "%ld", strlen(buffer));
+                            strcat(a, arroba);
+
+                            bytes_to_write = strlen(a);
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                /*if (written == -1) {
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_to_write != bytes_written) {
+                                    break;
+                                }*/
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
+                            }
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+
+                            bytes_written = 0;
+                            bytes_to_write = strlen(buffer);
+
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                /*if (written == -1) {
+                                    struct timespec ts;
+                                    ts.tv_sec = 0;
+                                    ts.tv_nsec = 100;
+                                    nanosleep(&ts, NULL);
+                                } else if(written == 0 && bytes_to_write != bytes_written) {
+                                    break;
+                                }*/
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
                             }
 
-                            bytes_written += written;
-                        } 
-                        get_time();
-                        printf("############BYTES WRITTEN: %d###########3\n", bytes_written);
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+                            sprintf(b, "%ld", r);
+                            strcat(b, arroba); 
 
-                        exit(1);
-                        break;
-                default: printf("SUCESSO\n");
-                        sprintf(a, "%ld", strlen(buffer));
-                        strcat(a, arroba);
-                        printf("VALOR DE WRITE: %d\n", send(new_fd, a, strlen(a), 0));
-                        bytes_to_write = strlen(buffer);
+                            bytes_written = 0;
+                            bytes_to_write = strlen(b);
 
-                        while (bytes_written != bytes_to_write) {
-                            size_t written;
+                            while (bytes_written != bytes_to_write) {
+                                size_t written;
 
-                            do {
-                                written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
-                            } while((written == -1) && (errno == EINTR));
+                                do {
+                                    written = send(new_fd, b + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
 
-                            if (written == -1) {
-                                struct timespec ts;
-                                ts.tv_sec = 0;
-                                ts.tv_nsec = 100;
-                                nanosleep(&ts, NULL);
-                            } else if(written == 0 && bytes_to_write != bytes_written) {
-                                /* Todo: send error message to server and ask for retransmit */
-                                break;
+                                if (written == -1) {
+                                    break;
+                                }
+                                bytes_written += written;
                             }
 
-                            bytes_written += written;
-                        }
-                        printf("############BYTES WRITTEN: %d###########3\n", bytes_written);
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+                            bytes_written = 0;
+                            bytes_to_write = r;
 
-                        sprintf(b, "%ld", r);
-                        strcat(b, arroba); 
-                        printf("VALOR DE WRITE: %d\n", send(new_fd, b, strlen(b), 0));
-                        
-                        bytes_written = 0;
-                        bytes_to_write = r;
+                            while (bytes_written != bytes_to_write) {
+                                size_t written;
 
-                        while (bytes_written != bytes_to_write) {
-                            size_t written;
+                                do {
+                                    written = send(new_fd, image + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
 
-                            do {
-                                written = send(new_fd, image + bytes_written, (bytes_to_write - bytes_written), 0);
-                            } while((written == -1) && (errno == EINTR));
-
-                            if (written == -1) {
-                                /* Real error. Do something appropriate. */
-                                exit(1);
+                                if (written == -1) {
+                                    break;
+                                }
+                                bytes_written += written;
                             }
-                            bytes_written += written;
-                        }
-                        
-                        exit(1);
-                        break;   
-
+                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+                            break;   
+                }
             }
+            close(new_fd);
+            exit(1);
         }
     } 
 
