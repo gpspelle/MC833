@@ -23,9 +23,7 @@ void client_call(char *input, int num_input) {
     int sockfd;
     long int numbytes = -1;  
     char buf[MAX_DATA_SIZE] = "";
-    char buf1[MAX_DATA_SIZE] = "";
     char *image;
-    //char *image1;
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -34,7 +32,7 @@ void client_call(char *input, int num_input) {
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo("177.220.84.162", PORT, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             return;
     }
@@ -86,7 +84,6 @@ void client_call(char *input, int num_input) {
     }
 
     numbytes = atoi(a);
-    //int k;
     size_t bytesRead = 0;
     size_t bytesToRead = numbytes;
 
@@ -97,13 +94,17 @@ void client_call(char *input, int num_input) {
         } while((readThisTime == -1) && (errno == EINTR));
 
         if (readThisTime == -1) {
-            /* Real error. Do something appropriate. */
+            struct timespec ts;
+            ts.tv_sec = 0;
+            ts.tv_nsec = 100;
+            nanosleep(&ts, NULL);
+        } else if(readThisTime == 0 && bytesToRead != bytesRead) {
+            /* Todo: send error message to server and ask for retransmit */
             break;
         }
         bytesRead += readThisTime;
     }
 
-    //while((k = read(sockfd, buf, numbytes)) < 0);
     buf[strlen(buf)-1] = '\0';
     printf("[%s]\n", buf);
     numbytes = -1;
@@ -143,14 +144,18 @@ void client_call(char *input, int num_input) {
             size_t readThisTime;
             do {
                 readThisTime = read(sockfd, image + bytesRead, (bytesToRead - bytesRead));
-
-                
             } while((readThisTime == -1) && (errno == EINTR));
 
             if (readThisTime == -1) {
-                /* Real error. Do something appropriate. */
+                struct timespec ts;
+                ts.tv_sec = 0;
+                ts.tv_nsec = 100;
+                nanosleep(&ts, NULL);
+            } else if(readThisTime == 0 && bytesToRead != bytesRead) {
+                /* Todo: send error message to server and ask for retransmit */
                 break;
             }
+
             bytesRead += readThisTime;
         }
 
@@ -170,10 +175,6 @@ void client_call(char *input, int num_input) {
             bytesWritten += writtenThisTime;
         }
 
-        //while((x = read(sockfd, image, numbytes)) < 0);
-
-        //fwrite(image, 1, numbytes, fp);
-        //fprintf(fp, "%s", image);
         fclose(fp);
     }
 
