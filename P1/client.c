@@ -75,7 +75,7 @@ void client_call(char *input, int num_input) {
 
     while(1) {
         char kkey0[1];
-        numbytes = read(sockfd, kkey0, 1); 
+        numbytes = recv(sockfd, kkey0, 1, 0); 
 
         if(*kkey0 == '@') {
             break;
@@ -87,21 +87,25 @@ void client_call(char *input, int num_input) {
     size_t bytesRead = 0;
     size_t bytesToRead = numbytes;
 
+    printf("Tenho de ler: %d\n", numbytes);
     while (bytesToRead != bytesRead) {
         size_t readThisTime;
+        printf("Oh dear, something went wrong with read()! %s\n", strerror(errno));
         do {
-            readThisTime = read(sockfd, buf + bytesRead, (bytesToRead - bytesRead));
+            readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
         } while((readThisTime == -1) && (errno == EINTR));
 
-        if (readThisTime == -1) {
+        if (readThisTime == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
             struct timespec ts;
             ts.tv_sec = 0;
             ts.tv_nsec = 100;
             nanosleep(&ts, NULL);
-        } else if(readThisTime == 0 && bytesToRead != bytesRead) {
-            /* Todo: send error message to server and ask for retransmit */
+        /*} else if(readThisTime == 0 && bytesToRead != bytesRead) {
             break;
-        }
+        }*/
+        } else if(readThisTime == 0) {
+            break;
+        }       
         bytesRead += readThisTime;
     }
 
@@ -125,7 +129,7 @@ void client_call(char *input, int num_input) {
 
         while(1) {
             char kkey1[1];
-            numbytes = read(sockfd, kkey1, 1); 
+            numbytes = recv(sockfd, kkey1, 1, 0); 
             kkey1[1] = '\0';
 
             if(*kkey1 == '@') {
@@ -143,10 +147,10 @@ void client_call(char *input, int num_input) {
         while (bytesToRead != bytesRead) {
             size_t readThisTime;
             do {
-                readThisTime = read(sockfd, image + bytesRead, (bytesToRead - bytesRead));
+                readThisTime = recv(sockfd, image + bytesRead, (bytesToRead - bytesRead), 0);
             } while((readThisTime == -1) && (errno == EINTR));
 
-            if (readThisTime == -1) {
+            if (readThisTime == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                 struct timespec ts;
                 ts.tv_sec = 0;
                 ts.tv_nsec = 100;
