@@ -609,6 +609,8 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                 char a[20] = "";
                 char b[20] = "";
                 char *arroba = "@";
+                size_t bytes_written = 0;
+                size_t bytes_to_write = 0;
 
                 switch(r) {
                     case 0: printf("ENTRADA INVALIDA\n"); break;
@@ -616,18 +618,65 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                             sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
                             printf("VALOR DE WRITE: %d\n", write(new_fd, a, strlen(a)));
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, buffer, strlen(buffer)));
+                            bytes_to_write = strlen(buffer);
+
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = write(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written));
+                                } while((written == -1) && (errno == EINTR));
+
+                                if (written == -1) {
+                                    /* Real error. Do something appropriate. */
+                                    break;
+                                }
+                                bytes_written += written;
+                            } 
+
                             exit(1);
                             break;
                     default: printf("SUCESSO\n");
                             sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
                             printf("VALOR DE WRITE: %d\n", write(new_fd, a, strlen(a)));
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, buffer, strlen(buffer)));
+                            bytes_to_write = strlen(buffer);
+
+                            while (bytes_written != bytes_to_write) {
+                                size_t written;
+
+                                do {
+                                    written = write(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written));
+                                } while((written == -1) && (errno == EINTR));
+
+                                if (written == -1) {
+                                    /* Real error. Do something appropriate. */
+                                    break;
+                                }
+                                bytes_written += written;
+                            }
+
                             sprintf(b, "%ld", r);
                             strcat(b, arroba); 
                             printf("VALOR DE WRITE: %d\n", write(new_fd, b, strlen(b)));
-                            printf("VALOR DE WRITE: %d\n", write(new_fd, image, r));
+                            
+                            bytes_written = 0;
+                            bytes_to_write = r;
+
+                            while (bytes_written != bytes_to_write) {
+                                size_t written;
+
+                                do {
+                                    written = write(new_fd, image + bytes_written, (bytes_to_write - bytes_written));
+                                } while((written == -1) && (errno == EINTR));
+
+                                if (written == -1) {
+                                    /* Real error. Do something appropriate. */
+                                    exit(1);
+                                }
+                                bytes_written += written;
+                            }
+                            
                             exit(1);
                             break;   
     

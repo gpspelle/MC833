@@ -86,8 +86,24 @@ void client_call(char *input, int num_input) {
     }
 
     numbytes = atoi(a);
-    int k;
-    while((k = read(sockfd, buf, numbytes)) < 0);
+    //int k;
+    size_t bytesRead = 0;
+    size_t bytesToRead = numbytes;
+
+    while (bytesToRead != bytesRead) {
+        size_t readThisTime;
+        do {
+            readThisTime = read(sockfd, buf + bytesRead, (bytesToRead - bytesRead));
+        } while((readThisTime == -1) && (errno == EINTR));
+
+        if (readThisTime == -1) {
+            /* Real error. Do something appropriate. */
+            break;
+        }
+        bytesRead += readThisTime;
+    }
+
+    //while((k = read(sockfd, buf, numbytes)) < 0);
     buf[strlen(buf)-1] = '\0';
     printf("[%s]\n", buf);
     numbytes = -1;
@@ -100,9 +116,8 @@ void client_call(char *input, int num_input) {
         strcat(path, ".jpg");
         struct stat st = {0};
 
-        printf("%s\n", path);
         if (stat("dados/", &st) == -1) {
-                mkdir("dados/", 0700);
+            mkdir("dados/", 0700);
         }
 
         FILE *fp = fopen(path, "wb");
@@ -118,12 +133,48 @@ void client_call(char *input, int num_input) {
             strcat(b, kkey1);
         }
 
-        printf("[%s] - strlen: %d\n", b, strlen(b));
         numbytes = atoi(b);
         image = malloc(sizeof(char)*(numbytes+1));
-        int x;
-        while((x = read(sockfd, image, numbytes)) < 0);
-        fwrite(image, 1, numbytes, fp);
+
+        bytesRead = 0;
+        bytesToRead = numbytes;
+
+        while (bytesToRead != bytesRead) {
+            size_t readThisTime;
+            do {
+                readThisTime = read(sockfd, image + bytesRead, (bytesToRead - bytesRead));
+
+                
+            } while((readThisTime == -1) && (errno == EINTR));
+
+            if (readThisTime == -1) {
+                /* Real error. Do something appropriate. */
+                break;
+            }
+            bytesRead += readThisTime;
+        }
+
+        size_t bytesToWrite = numbytes;
+        size_t bytesWritten = 0;
+
+        while (bytesWritten != bytesToWrite) {
+            size_t writtenThisTime;
+
+            do {
+               writtenThisTime = fwrite(image, 1, (bytesToWrite - bytesWritten), fp);
+            } while((writtenThisTime == -1) && (errno == EINTR));
+
+            if (writtenThisTime == -1) {
+                break;
+            }
+            bytesWritten += writtenThisTime;
+        }
+
+        //while((x = read(sockfd, image, numbytes)) < 0);
+
+        //fwrite(image, 1, numbytes, fp);
+        //fprintf(fp, "%s", image);
+        fclose(fp);
     }
 
     close(sockfd);
