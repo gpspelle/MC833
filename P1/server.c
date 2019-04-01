@@ -88,6 +88,8 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                 strcat(buffer, "\n");
             }
 
+            printf("[%s]\n", buffer);
+
         } else if (!strcmp(command, "listar_habilidades")) {
             /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
             char *cidade = strtok (NULL, ";");
