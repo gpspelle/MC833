@@ -478,7 +478,6 @@ int main(int argc, char *argv[]) {
             fclose(fp);
             printf("[%s]\n", buf);
             printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
-            close(sockfd);
         }
 
         get_time(fp_output);
@@ -486,9 +485,6 @@ int main(int argc, char *argv[]) {
         printf("[%s]\n", buf);
         printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
 
-
-        //client_call(message, input, fp_output, sockfd);
-       
     }
    
     close(sockfd);

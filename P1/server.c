@@ -617,16 +617,16 @@ int main(int argc, char *argv[]) {
                 char client_message[BUFF_SIZE] = "";
                 char buffer[BUFF_SIZE] = "";
                 char image[100000] = "";
-                while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
-                long int r = treat_call(client_message, buffer, image);
                 long int numbytes = -1;
                 char a[20] = "";
                 char b[20] = "";
                 char *arroba = "@";
                 size_t bytes_written = 0;
+                while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
+                long int r = treat_call(client_message, buffer, image);
+                get_time(fp);
                 size_t bytes_to_write = 0;
 
-                get_time(fp);
                 switch(r) {
                     case 0: printf("ENTRADA INVALIDA\n"); 
                             exit_ = 1;
