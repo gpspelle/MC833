@@ -612,7 +612,7 @@ int main(int argc, char *argv[]) {
 
         if (!fork()) { // this is the child process, used for child
             close(sockfd);
-            FILE *fp = fopen(path, "a");
+            FILE *fp = fopen(path, "w");
             while(!exit_) { //client loop
                 char client_message[BUFF_SIZE] = "";
                 char buffer[BUFF_SIZE] = "";
