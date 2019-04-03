@@ -14,7 +14,7 @@ void get_time(FILE *fp) {
     timespec_get(&ts, TIME_UTC);
     char buff[100];
     strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    fprintf(fp, "%s.%09ld;", buff, ts.tv_nsec);
+    fprintf(fp, "%s.%09ld;", buff+9, ts.tv_nsec);
 }
 
 void client_call(char *input, int num_input, FILE *fp_output) {

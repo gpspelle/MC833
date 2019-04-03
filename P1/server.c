@@ -27,7 +27,7 @@ void get_time(FILE *fp) {
     timespec_get(&ts, TIME_UTC);
     char buff[100];
     strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    fprintf(fp, "%s.%09ld;", buff, ts.tv_nsec);
+    fprintf(fp, "%s.%09ld;", buff+9, ts.tv_nsec);
 }
 
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]) {
