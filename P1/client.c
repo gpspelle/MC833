@@ -83,7 +83,7 @@ void client_call(char *input, int num_input, FILE *fp_output, int sockfd) {
             return;
     }*/
 
-    get_time(fp_output);
+    //get_time(fp_output);
     /*if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             return;
@@ -496,12 +496,13 @@ int main(int argc, char *argv[]) {
             fclose(fp);
             printf("[%s]\n", buf);
             printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
-        }
+        } else { 
+            get_time(fp_output);
+            fprintf(fp_output, "\n");
+            printf("[%s]\n", buf);
+            printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
 
-        get_time(fp_output);
-        fprintf(fp_output, "\n");
-        printf("[%s]\n", buf);
-        printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+        }
 
     }
    
