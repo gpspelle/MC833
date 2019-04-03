@@ -363,15 +363,33 @@ int main(int argc, char *argv[]) {
 
         printf("Message [%s]\n", message);
 
-                char buf[MAX_DATA_SIZE] = "";
+        char buf[MAX_DATA_SIZE] = "";
         char *image;
         long int numbytes = -1;  
         get_time(fp_output);
 
-        if (send(sockfd, message, MAX_DATA_SIZE, 0) == -1) {
+        size_t bytes_written = 0;
+        size_t bytes_to_write = 0;
+        bytes_to_write = strlen(message);
+
+        while (bytes_written - bytes_to_write != 0) {
+            size_t written;
+
+            do {
+                written = send(sockfd, message + bytes_written, (bytes_to_write - bytes_written), 0);
+            } while((written == -1) && (errno == EINTR));
+
+            if(written == -1) {
+                break;
+            }
+
+            bytes_written += written;
+        }
+
+        /*if (send(sockfd, message, MAX_DATA_SIZE, 0) == -1) {
             perror("send");
             exit(1);
-        } 
+        }*/
 
         char a[20] = "";
         char b[20] = "";
