@@ -17,7 +17,7 @@ void get_time(FILE *fp) {
     fprintf(fp, "%s.%09ld;", buff, ts.tv_nsec);
 }
 
-void client_call(char *input, int num_input) {
+void client_call(char *input, int num_input, FILE *fp_output) {
 
     int sockfd;
     long int numbytes = -1;  
@@ -36,6 +36,7 @@ void client_call(char *input, int num_input) {
             return;
     }*/
 
+    get_time(fp_output);
     if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
             fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
             return;
@@ -91,7 +92,7 @@ void client_call(char *input, int num_input) {
     }
 
     numbytes = atoi(a);
-    printf("(%d) - [%s]\n", numbytes, a);
+    //printf("(%d) - [%s]\n", numbytes, a);
     size_t bytesRead = 0;
     size_t bytesToRead = numbytes;
 
@@ -101,15 +102,6 @@ void client_call(char *input, int num_input) {
             readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
         } while((readThisTime == -1) && (errno == EINTR));
 
-        /*if (readThisTime == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-            struct timespec ts;
-            ts.tv_sec = 0;
-            ts.tv_nsec = 100;
-            nanosleep(&ts, NULL);
-        } else if(readThisTime == 0) {
-            break;
-        }*/
-
         if(readThisTime == -1) {
             break;
         }  
@@ -117,8 +109,6 @@ void client_call(char *input, int num_input) {
         bytesRead += readThisTime;
     }
 
-    printf("[%s]\n", buf);
-    printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
     numbytes = -1;
 
     if(num_input == 6) {
@@ -160,20 +150,15 @@ void client_call(char *input, int num_input) {
                 readThisTime = recv(sockfd, image + bytesRead, (bytesToRead - bytesRead), 0);
             } while((readThisTime == -1) && (errno == EINTR));
 
-            /*if (readThisTime == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
-                struct timespec ts;
-                ts.tv_sec = 0;
-                ts.tv_nsec = 100;
-                nanosleep(&ts, NULL);
-            } else if(readThisTime == 0 && bytesToRead != bytesRead) {
-                break;
-            }*/
             if(readThisTime == -1) {
                 break;
             }
 
             bytesRead += readThisTime;
         }
+
+        get_time(fp_output);
+        fprintf(fp_output, "\n");
 
         size_t bytesToWrite = numbytes;
         size_t bytesWritten = 0;
@@ -185,15 +170,6 @@ void client_call(char *input, int num_input) {
                writtenThisTime = fwrite(image, 1, (bytesToWrite - bytesWritten), fp);
             } while((writtenThisTime == -1) && (errno == EINTR));
 
-            /*if (writtenThisTime == -1) {
-                struct timespec ts;
-                ts.tv_sec = 0;
-                ts.tv_nsec = 100;
-                nanosleep(&ts, NULL);
-            } else if(writtenThisTime == 0 && bytesToWrite != bytesWritten) {
-                break;
-            }*/
-
             if(writtenThisTime == -1) {
                 break;
             }
@@ -202,13 +178,24 @@ void client_call(char *input, int num_input) {
         }
 
         fclose(fp);
+        printf("[%s]\n", buf);
+        printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+        close(sockfd);
+        return;
     }
 
+    get_time(fp_output);
+    fprintf(fp_output, "\n");
+    printf("[%s]\n", buf);
+    printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
     close(sockfd);
 
 }
 
 int main(int argc, char *argv[]) {
+
+    setenv("TZ", "PST8PDT", 1);
+    tzset();
 
     printf("%d\n", argc);
 
@@ -220,8 +207,8 @@ int main(int argc, char *argv[]) {
               ./client 2 */
     char path[100] = "";
     strcat(path, argv[1]);
-    strcat(path, ".out");
-    FILE *fp = fopen(path, "wb");
+    strcat(path, "_client.out");
+    FILE *fp_output = fopen(path, "wb");
     char fi_path[100] = "";
     strcat(fi_path, argv[1]);
     strcat(fi_path, ".in");
@@ -244,7 +231,7 @@ int main(int argc, char *argv[]) {
         char email[100];
         char message[300] = "";
 
-        printf("Input: [%d] ", input);
+        //printf("Input: [%d] ", input);
 
         switch(input) {
             case 1: printf("Qual curso: ");
@@ -280,20 +267,17 @@ int main(int argc, char *argv[]) {
                     break;
             default:
                     fclose(fi);
-                    fclose(fp); 
-                    exit(1);
+                    fclose(fp_output); 
+                    return 0;
         }
 
         printf("Message [%s]\n", message);
 
-        get_time(fp);
-        client_call(message, input);
-        get_time(fp);
-        fprintf(fp, "\n");
+        client_call(message, input, fp_output);
        
     }
    
-    fclose(fp); 
+    fclose(fp_output); 
     fclose(fi);
 
     return 0;

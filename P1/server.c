@@ -22,12 +22,12 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void get_time() {
+void get_time(FILE *fp) {
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     char buff[100];
     strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    printf("Current time: %s.%09ld UTC\n", buff, ts.tv_nsec);
+    fprintf(fp, "%s.%09ld;", buff, ts.tv_nsec);
 }
 
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]) {
@@ -52,7 +52,6 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
         fprintf(stderr, "Succesfully using "DB"\n");
     }
 
-    printf("Client_message: [%s]\n", client_message);
     command = strtok (client_message, ";");
     if(!strcmp(command, "listar_curso")) {
         /*listar todas as pessoas formadas em um determinado curso;*/
@@ -73,22 +72,20 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
             return_error(con);
         }
 
-            int num_fields = mysql_num_fields(result);
-            MYSQL_ROW row;
-            while((row = mysql_fetch_row(result))) {
-                for(int i = 0; i < num_fields; i++) {
-                    if(i == 0) {
-                        strcat(buffer, "Nome: ");
-                    } else {
-                        strcat(buffer, " Sobrenome: ");
-                    }
-
-                    strcat(buffer, row[i]);
+        int num_fields = mysql_num_fields(result);
+        MYSQL_ROW row;
+        while((row = mysql_fetch_row(result))) {
+            for(int i = 0; i < num_fields; i++) {
+                if(i == 0) {
+                    strcat(buffer, "Nome: ");
+                } else {
+                    strcat(buffer, " Sobrenome: ");
                 }
-                strcat(buffer, "\n");
-            }
 
-            printf("[%s]\n", buffer);
+                strcat(buffer, row[i]);
+            }
+            strcat(buffer, "\n");
+        }
 
     } else if (!strcmp(command, "listar_habilidades")) {
         /*listar as habilidades dos perfis que moram em uma determinada cidade;*/
@@ -520,7 +517,9 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
     return 1;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    setenv("TZ", "PST8PDT", 1);
+    tzset();
 
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
     socklen_t sin_size;
@@ -530,6 +529,16 @@ int main() {
     int yes=1;
     char s[INET6_ADDRSTRLEN];
     int rv;
+
+    if(argc < 2) {
+        printf("Numero invalido de argumentos para o servidor\n");
+        return 0;
+    }
+    /* usage: ./servidor 1 
+              ./servidor 2 */
+    char path[100] = "";
+    strcat(path, argv[1]);
+    strcat(path, "_servidor.out");
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -588,6 +597,7 @@ int main() {
 
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
+
         new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
         if (new_fd == -1) {
                 perror("accept");
@@ -602,12 +612,12 @@ int main() {
 
         if (!fork()) { // this is the child process, used for child
             close(sockfd);
+            FILE *fp = fopen(path, "a");
             while(!exit_) { //client loop
                 char client_message[BUFF_SIZE] = "";
                 char buffer[BUFF_SIZE] = "";
                 char image[100000] = "";
                 while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
-                printf("[%s]\n", client_message);
                 long int r = treat_call(client_message, buffer, image);
                 long int numbytes = -1;
                 char a[20] = "";
@@ -616,12 +626,12 @@ int main() {
                 size_t bytes_written = 0;
                 size_t bytes_to_write = 0;
 
+                get_time(fp);
                 switch(r) {
                     case 0: printf("ENTRADA INVALIDA\n"); 
                             exit_ = 1;
                             break;
-                    case 1: printf("SUCESSO\n"); 
-                            sprintf(a, "%ld", strlen(buffer));
+                    case 1: sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
 
                             bytes_to_write = strlen(a);
@@ -633,15 +643,6 @@ int main() {
                                     written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
-                                /*if (written == -1) {
-                                    struct timespec ts;
-                                    ts.tv_sec = 0;
-                                    ts.tv_nsec = 100;
-                                    nanosleep(&ts, NULL);
-                                } else if(written == 0 && bytes_to_write != bytes_written) {
-                                    break;
-                                }*/
-
                                 if(written == -1) {
                                     break;
                                 }
@@ -649,7 +650,6 @@ int main() {
                                 bytes_written += written;
                             } 
 
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
                             bytes_written = 0;
                             bytes_to_write = strlen(buffer);
 
@@ -660,25 +660,14 @@ int main() {
                                     written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
-                                /*if (written == -1) {
-                                    struct timespec ts;
-                                    ts.tv_sec = 0;
-                                    ts.tv_nsec = 100;
-                                    nanosleep(&ts, NULL);
-                                } else if(written == 0 && bytes_to_write != bytes_written) {
-                                    break;
-                                }*/
-
                                 if(written == -1) {
                                     break;
                                 }
 
                                 bytes_written += written;
                             } 
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
                             break;
-                    default: printf("SUCESSO\n");
-                            sprintf(a, "%ld", strlen(buffer));
+                    default: sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
 
                             bytes_to_write = strlen(a);
@@ -689,22 +678,12 @@ int main() {
                                     written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
-                                /*if (written == -1) {
-                                    struct timespec ts;
-                                    ts.tv_sec = 0;
-                                    ts.tv_nsec = 100;
-                                    nanosleep(&ts, NULL);
-                                } else if(written == 0 && bytes_to_write != bytes_written) {
-                                    break;
-                                }*/
-
                                 if(written == -1) {
                                     break;
                                 }
 
                                 bytes_written += written;
                             }
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
 
                             bytes_written = 0;
                             bytes_to_write = strlen(buffer);
@@ -716,15 +695,6 @@ int main() {
                                     written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
                                 } while((written == -1) && (errno == EINTR));
 
-                                /*if (written == -1) {
-                                    struct timespec ts;
-                                    ts.tv_sec = 0;
-                                    ts.tv_nsec = 100;
-                                    nanosleep(&ts, NULL);
-                                } else if(written == 0 && bytes_to_write != bytes_written) {
-                                    break;
-                                }*/
-
                                 if(written == -1) {
                                     break;
                                 }
@@ -732,7 +702,6 @@ int main() {
                                 bytes_written += written;
                             }
 
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
                             sprintf(b, "%ld", r);
                             strcat(b, arroba); 
 
@@ -752,7 +721,6 @@ int main() {
                                 bytes_written += written;
                             }
 
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
                             bytes_written = 0;
                             bytes_to_write = r;
 
@@ -768,10 +736,16 @@ int main() {
                                 }
                                 bytes_written += written;
                             }
-                            printf("(%d, %d)\n", bytes_to_write, bytes_written);
+
                             break;   
                 }
+                get_time(fp);
+                fprintf(fp, "\n");
+                fflush(fp);
+
             }
+            
+            fclose(fp);    
             close(new_fd);
             exit(1);
         }
