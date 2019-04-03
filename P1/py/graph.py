@@ -95,7 +95,11 @@ for (cli, serv) in zip(input, input_serv):
     
     server_time = (d2-d1).total_seconds()
 
-    print("{},{},{}".format(client_time, server_time, client_time - server_time))
+    cliserver = str(client_time - server_time).replace('.', ',')
+    client_time = str(client_time).replace('.', ',')
+    server_time = str(server_time).replace('.', ',')
+
+    print("{};{};{}".format(client_time, server_time, cliserver))
 
 
 
