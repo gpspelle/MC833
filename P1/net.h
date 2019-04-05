@@ -18,6 +18,7 @@
 #define MAX_DATA_SIZE 10240 // max number of bytes we can get at once 
 #define BUFF_SIZE 10240
 #define WR_SIZE 1024
+#define IMAGE_SIZE 200000
 
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]);
 void *get_in_addr(struct sockaddr *sa);

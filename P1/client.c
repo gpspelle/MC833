@@ -132,73 +132,239 @@ int main(int argc, char *argv[]) {
                     strcat(message, email);
                     break;
             default:
+                    close(sockfd);
                     fclose(fi);
                     fclose(fp_output); 
                     return 0;
         }
 
-        printf("Message [%s]\n", message);
+        if(input == 5) {
 
-        char buf[MAX_DATA_SIZE] = "";
-        char *image;
-        long int numbytes = -1;  
-        get_time(fp_output);
+            size_t bytes_written = 0;
+            size_t bytes_to_write = 0;
+            bytes_to_write = strlen(message);
+            
+            get_time(fp_output);
+            while (bytes_written - bytes_to_write != 0) {
+                size_t written;
 
-        size_t bytes_written = 0;
-        size_t bytes_to_write = 0;
-        bytes_to_write = strlen(message);
+                do {
+                    written = send(sockfd, message + bytes_written, (bytes_to_write - bytes_written), 0);
+                } while((written == -1) && (errno == EINTR));
 
-        while (bytes_written - bytes_to_write != 0) {
-            size_t written;
+                if(written == -1) {
+                    break;
+                }
 
-            do {
-                written = send(sockfd, message + bytes_written, (bytes_to_write - bytes_written), 0);
-            } while((written == -1) && (errno == EINTR));
-
-            if(written == -1) {
-                break;
+                bytes_written += written;
             }
 
-            bytes_written += written;
-        }
+            char quantidade_usuarios[20] = "";
+            int numbytes;
 
-        char a[20] = "";
-        char b[20] = "";
+            while(1) {
+                char kkey0[1] = "";
+                kkey0[0] = '\0';
+                numbytes = recv(sockfd, kkey0, 1, 0); 
+                kkey0[1] = '\0';
 
-        while(1) {
-            char kkey0[1] = "";
-            kkey0[0] = '\0';
-            numbytes = recv(sockfd, kkey0, 1, 0); 
-            kkey0[1] = '\0';
+                if(*kkey0 == '@') {
+                    break;
+                }
 
-            if(*kkey0 == '@') {
-                break;
+                strcat(quantidade_usuarios, kkey0);
             }
 
-            strcat(a, kkey0);
+            int num_usuarios = atoi(quantidade_usuarios);
+            
+            for(int i = 0; i < num_usuarios; i++) {
+                char buf[MAX_DATA_SIZE] = "";
+                char *image;
+
+                char a[20] = "";
+                char b[20] = "";
+
+                while(1) {
+                    char kkey0[1] = "";
+                    kkey0[0] = '\0';
+                    numbytes = recv(sockfd, kkey0, 1, 0); 
+                    kkey0[1] = '\0';
+
+                    if(*kkey0 == '@') {
+                        break;
+                    }
+
+                    strcat(a, kkey0);
+                }
+
+                numbytes = atoi(a);
+                size_t bytesRead = 0;
+                size_t bytesToRead = numbytes;
+
+                while (bytesToRead != bytesRead) {
+                    size_t readThisTime;
+                    do {
+                        readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
+                    } while((readThisTime == -1) && (errno == EINTR));
+
+                    if(readThisTime == -1) {
+                        break;
+                    }  
+
+                    bytesRead += readThisTime;
+                }
+
+                printf("Buf: %s\n", buf);
+
+                char email[1000] = "";
+                
+                char *find = strstr(buf, "Email: ");
+
+                while(find[0] != ' ') {
+                    find+=sizeof(char);
+                }
+
+                find += sizeof(char);
+
+                while(find[0] != '\n') {
+                    strncat(email, find, 1);
+                    find += sizeof(char);
+                }
+
+                numbytes = -1;
+
+                char path[1000] = "dados/";
+                strcat(path, email); 
+                strcat(path, ".jpg");
+                struct stat st = {0};
+
+                if (stat("dados/", &st) == -1) {
+                    mkdir("dados/", 0700);
+                }
+
+                FILE *fp = fopen(path, "wb");
+
+                while(1) {
+                    char kkey1[1] = "";
+                    kkey1[0] = '\0';
+                    numbytes = recv(sockfd, kkey1, 1, 0); 
+                    kkey1[1] = '\0';
+
+                    if(*kkey1 == '@') {
+                        break;
+                    }
+                
+                    strcat(b, kkey1);
+                }
+
+                numbytes = atoi(b);
+                image = malloc(sizeof(char)*(numbytes+1));
+
+                bytesRead = 0;
+                bytesToRead = numbytes;
+
+                while (bytesToRead != bytesRead) {
+                    size_t readThisTime;
+                    do {
+                        readThisTime = recv(sockfd, image + bytesRead, (bytesToRead - bytesRead), 0);
+                    } while((readThisTime == -1) && (errno == EINTR));
+
+                    if(readThisTime == -1) {
+                        break;
+                    }
+
+                    bytesRead += readThisTime;
+                }
+
+                size_t bytesToWrite = numbytes;
+                size_t bytesWritten = 0;
+
+                while (bytesWritten != bytesToWrite) {
+                    size_t writtenThisTime;
+
+                    do {
+                       writtenThisTime = fwrite(image, 1, (bytesToWrite - bytesWritten), fp);
+                    } while((writtenThisTime == -1) && (errno == EINTR));
+
+                    if(writtenThisTime == -1) {
+                        break;
+                    }
+
+                    bytesWritten += writtenThisTime;
+                }
+
+                fclose(fp);
+                free(image);
+                //printf("[%s]\n", buf);
+                //printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+            }
+   
+        } else {
+
+            printf("Message [%s]\n", message);
+
+            char buf[MAX_DATA_SIZE] = "";
+            long int numbytes = -1;  
+            get_time(fp_output);
+
+            size_t bytes_written = 0;
+            size_t bytes_to_write = 0;
+            bytes_to_write = strlen(message);
+
+            while (bytes_written - bytes_to_write != 0) {
+                size_t written;
+
+                do {
+                    written = send(sockfd, message + bytes_written, (bytes_to_write - bytes_written), 0);
+                } while((written == -1) && (errno == EINTR));
+
+                if(written == -1) {
+                    break;
+                }
+
+                bytes_written += written;
+            }
+
+            char a[20] = "";
+
+            while(1) {
+                char kkey0[1] = "";
+                kkey0[0] = '\0';
+                numbytes = recv(sockfd, kkey0, 1, 0); 
+                kkey0[1] = '\0';
+
+                if(*kkey0 == '@') {
+                    break;
+                }
+
+                strcat(a, kkey0);
+            }
+
+            numbytes = atoi(a);
+            size_t bytesRead = 0;
+            size_t bytesToRead = numbytes;
+
+            while (bytesToRead != bytesRead) {
+                size_t readThisTime;
+                do {
+                    readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
+                } while((readThisTime == -1) && (errno == EINTR));
+
+                if(readThisTime == -1) {
+                    break;
+                }  
+
+                bytesRead += readThisTime;
+            }
+
+            printf("[%s]\n", buf);
+            printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+
         }
-
-        numbytes = atoi(a);
-        size_t bytesRead = 0;
-        size_t bytesToRead = numbytes;
-
-        while (bytesToRead != bytesRead) {
-            size_t readThisTime;
-            do {
-                readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
-            } while((readThisTime == -1) && (errno == EINTR));
-
-            if(readThisTime == -1) {
-                break;
-            }  
-
-            bytesRead += readThisTime;
-        }
-
-        numbytes = -1;
-
+         
         if(input == 6) {
             char *email = strtok(message, ";");
+            char buf[BUFF_SIZE] = "";
             email = strtok (NULL, ";");
             char path[1000] = "dados/";
             strcat(path, email); 
@@ -210,6 +376,8 @@ int main(int argc, char *argv[]) {
             }
 
             FILE *fp = fopen(path, "wb");
+            int numbytes;
+            char b[20] = "";
 
             while(1) {
                 char kkey1[1] = "";
@@ -225,10 +393,10 @@ int main(int argc, char *argv[]) {
             }
 
             numbytes = atoi(b);
-            image = malloc(sizeof(char)*(numbytes+1));
+            char *image = malloc(sizeof(char)*(numbytes+1));
 
-            bytesRead = 0;
-            bytesToRead = numbytes;
+            size_t bytesRead = 0;
+            size_t bytesToRead = numbytes;
 
             while (bytesToRead != bytesRead) {
                 size_t readThisTime;
@@ -243,8 +411,6 @@ int main(int argc, char *argv[]) {
                 bytesRead += readThisTime;
             }
 
-            get_time(fp_output);
-            fprintf(fp_output, "\n");
 
             size_t bytesToWrite = numbytes;
             size_t bytesWritten = 0;
@@ -264,16 +430,13 @@ int main(int argc, char *argv[]) {
             }
 
             fclose(fp);
+            free(image);
             printf("[%s]\n", buf);
             printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
-        } else { 
-            get_time(fp_output);
-            fprintf(fp_output, "\n");
-            printf("[%s]\n", buf);
-            printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
-
         }
 
+        get_time(fp_output);
+        fprintf(fp_output, "\n");
     }
    
     close(sockfd);

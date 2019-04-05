@@ -30,7 +30,166 @@ void get_time(FILE *fp) {
     fprintf(fp, "%s.%09ld;", buff+9, ts.tv_nsec);
 }
 
-long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]) {
+long int req6(char *email, char buffer[BUFF_SIZE], char image[IMAGE_SIZE], MYSQL *con) {
+
+    char query[1000] = "select * from "tabelaUSER" where email='";
+    strcat(query, email);
+    strcat(query, "';"); 
+
+    if (mysql_query(con, query)) {
+        return_error(con);
+    } else {
+        printf("Succesfully got * from "tabelaUSER" for specific email\n");
+    }
+
+    MYSQL_RES *result = mysql_store_result(con);
+    
+    if (result == NULL) {
+        return_error(con);
+    }
+
+    int num_fields = mysql_num_fields(result);
+    long int flen = 0;
+    MYSQL_ROW row;
+    while((row = mysql_fetch_row(result))) {
+        for(int i = 1; i < num_fields; i++) {
+            switch(i) {
+                case 1: strcat(buffer, "Email: ") ; break;
+                case 2: strcat(buffer, "Nome: "); break;
+                case 3: strcat(buffer, "Sobrenome: "); break;
+                case 4: strcat(buffer, "Foto: "); 
+                        FILE *fp = fopen(row[i], "rb");
+                        if (fp == NULL) {
+                            fprintf(stderr, "cannot open image file %s\n", row[i]);    
+                            exit(1);
+                        }
+
+                        fseek(fp, 0, SEEK_END);
+                          
+                        if (ferror(fp)) {
+                                    
+                            fprintf(stderr, "fseek() failed\n");
+                            int r = fclose(fp);
+
+                            if (r == EOF) {
+                                fprintf(stderr, "cannot close file handler\n");          
+                            }    
+                                                      
+                            exit(1);
+                        }  
+                            
+                        flen = ftell(fp);
+                              
+                        if (flen == -1) {
+                                        
+                            perror("error occurred");
+                            int r = fclose(fp);
+
+                            if (r == EOF) {
+                                fprintf(stderr, "cannot close file handler\n");
+                            }
+                            exit(1);      
+                        }
+                                
+                        fseek(fp, 0, SEEK_SET);
+                                  
+                        if (ferror(fp)) {
+                            fprintf(stderr, "fseek() failed\n");
+                            int r = fclose(fp);
+                            if (r == EOF) {
+                                fprintf(stderr, "cannot close file handler\n");
+                            }                                  
+                            exit(1);
+                        }
+                        fread(image, 1, flen, fp);
+                        image[flen+1] = '\0';
+                        break;
+                case 5: strcat(buffer, "Residencia "); break;
+                case 6: strcat(buffer, "Formacao: "); break;
+            }
+            strcat(buffer, row[i]);
+
+            if(i != 2) {
+                strcat(buffer, "\n");
+            } else {
+                strcat(buffer, " ");
+            }
+        }
+
+        char query_[1000] = "select hab from "tabelaHAB" where Personid='";
+        strcat(query_, row[0]);
+        strcat(query_, "';");
+
+        if (mysql_query(con, query_)) {
+            return_error(con);
+        }
+
+        MYSQL_RES *result_ = mysql_store_result(con);
+
+        if (result_ == NULL) {
+            return_error(con);
+        }
+
+        int num_fields_ = mysql_num_fields(result_);
+        MYSQL_ROW row_;
+
+        int entrei = 0;
+        strcat(buffer, "Habilidades: ");
+        while((row_ = mysql_fetch_row(result_))) {
+            if(entrei) {
+                strcat(buffer, ", ");
+            }
+            entrei = 1;
+            for(int j = 0; j < num_fields_; j++) {
+                strcat(buffer, row_[j]); 
+            }
+        }
+
+        strcat(buffer, "\n");
+        char query__[1000] = "select exp from "tabelaEXP" where Personid='";
+        strcat(query__, row[0]);
+        strcat(query__, "';");
+
+        if (mysql_query(con, query__)) {
+            return_error(con);
+        }
+
+        MYSQL_RES *result__ = mysql_store_result(con);
+
+        if (result__ == NULL) {
+            return_error(con);
+        }
+
+        int num_fields__ = mysql_num_fields(result__);
+        MYSQL_ROW row__;
+        
+        int counter = 1;
+        char a[3];
+        strcat(buffer, "Experiencia: ");
+        while((row__ = mysql_fetch_row(result__))) {
+            for(int j = 0; j < num_fields__; j++) {
+                if(counter != 1) {
+                    strcat(buffer, "\t     ");
+                }
+                strcat(buffer, "(");
+                sprintf(a, "%d", counter);
+                strcat(buffer, a);
+                strcat(buffer, ") ");
+                strcat(buffer, row__[j]); 
+                strcat(buffer, "\n");
+            }
+            counter += 1;
+        }
+        
+        return flen;
+    }
+
+    printf("Deu ruim\n");
+    return - 1;
+
+}
+
+long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[IMAGE_SIZE]) {
 
     char *command;
   
@@ -246,115 +405,9 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
             }
         }
 
-    } else if (!strcmp(command, "listar_tudo")) {
-        /*listar todas as informações de todos os perfis;*/
-
-        char query[1000] = "select * from "tabelaUSER";";
-
-        if (mysql_query(con, query)) {
-            return_error(con);
-        } else {
-            printf("Succesfully get * from "tabelaUSER"\n");
-        }
-
-        MYSQL_RES *result = mysql_store_result(con);
-        
-        if (result == NULL) {
-            return_error(con);
-        }
-
-        int num_fields = mysql_num_fields(result);
-        MYSQL_ROW row;
-
-        while((row = mysql_fetch_row(result))) {
-            for(int i = 1; i < num_fields; i++) {
-                switch(i) {
-                    case 1: strcat(buffer, "Email: ") ; break;
-                    case 2: strcat(buffer, "Nome: "); break;
-                    case 3: strcat(buffer, "Sobrenome: "); break;
-                    case 4: strcat(buffer, "Foto: "); break;
-                    case 5: strcat(buffer, "Residencia "); break;
-                    case 6: strcat(buffer, "Formacao: "); break;
-                }
-                strcat(buffer, row[i]);
-                
-                if(i != 2) {
-                    strcat(buffer, "\n");
-                } else {
-                    strcat(buffer, " ");
-                }
-            }
-            char query_[1000] = "select hab from "tabelaHAB" where Personid='";
-            strcat(query_, row[0]);
-            strcat(query_, "';");
-
-            if (mysql_query(con, query_)) {
-                return_error(con);
-            }
-
-            MYSQL_RES *result_ = mysql_store_result(con);
-    
-            if (result_ == NULL) {
-                return_error(con);
-            }
-
-            int num_fields_ = mysql_num_fields(result_);
-            MYSQL_ROW row_;
-
-            int entrei = 0;
-            strcat(buffer, "Habilidades: ");
-            while((row_ = mysql_fetch_row(result_))) {
-                if(entrei) {
-                    strcat(buffer, ", ");
-                }
-                entrei = 1;
-                for(int j = 0; j < num_fields_; j++) {
-                    strcat(buffer, row_[j]); 
-                }
-            }
-
-            strcat(buffer, "\n");
-            char query__[1000] = "select exp from "tabelaEXP" where Personid='";
-            strcat(query__, row[0]);
-            strcat(query__, "';");
-
-            if (mysql_query(con, query__)) {
-                return_error(con);
-            }
-
-            MYSQL_RES *result__ = mysql_store_result(con);
-    
-            if (result__ == NULL) {
-                return_error(con);
-            }
-
-            int num_fields__ = mysql_num_fields(result__);
-            MYSQL_ROW row__;
-            
-            int counter = 1;
-            char a[3];
-            strcat(buffer, "Experiencia: ");
-            while((row__ = mysql_fetch_row(result__))) {
-                for(int j = 0; j < num_fields__; j++) {
-                    if(counter != 1) {
-                        strcat(buffer, "\t     ");
-                    }
-                    strcat(buffer, "(");
-                    sprintf(a, "%d", counter);
-                    strcat(buffer, a);
-                    strcat(buffer, ") ");
-                    strcat(buffer, row__[j]); 
-                    strcat(buffer, "\n");
-                }
-                counter += 1;
-            }
-            
-        }
-
     } else if (!strcmp(command, "email_tudo")) {
         /*dado o email de um perfil, retornar suas informações*/
         char *email = strtok (NULL, ";");
-
         char query[1000] = "select * from "tabelaUSER" where email='";
         strcat(query, email);
         strcat(query, "';"); 
@@ -374,6 +427,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
         int num_fields = mysql_num_fields(result);
         long int flen = 0;
         MYSQL_ROW row;
+
         while((row = mysql_fetch_row(result))) {
             for(int i = 1; i < num_fields; i++) {
                 switch(i) {
@@ -430,6 +484,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
                     case 5: strcat(buffer, "Residencia "); break;
                     case 6: strcat(buffer, "Formacao: "); break;
                 }
+
                 strcat(buffer, row[i]);
 
                 if(i != 2) {
@@ -448,7 +503,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
             }
 
             MYSQL_RES *result_ = mysql_store_result(con);
-    
+
             if (result_ == NULL) {
                 return_error(con);
             }
@@ -478,7 +533,7 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
             }
 
             MYSQL_RES *result__ = mysql_store_result(con);
-    
+
             if (result__ == NULL) {
                 return_error(con);
             }
@@ -506,11 +561,12 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
             
             mysql_close(con);
             return flen;
+
         }
+
     } else {
         mysql_close(con);
         return 0;
-        
     }
 
     mysql_close(con);
@@ -615,62 +671,84 @@ int main(int argc, char *argv[]) {
             FILE *fp = fopen(path, "w");
             while(!exit_) { //client loop
                 char client_message[BUFF_SIZE] = "";
-                char buffer[BUFF_SIZE] = "";
-                char image[100000] = "";
-                long int numbytes = -1;
                 char a[20] = "";
                 char b[20] = "";
                 char *arroba = "@";
+                long int numbytes = -1;
                 size_t bytes_written = 0;
-                while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
-                long int r = treat_call(client_message, buffer, image);
-                get_time(fp);
                 size_t bytes_to_write = 0;
+                while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
 
-                switch(r) {
-                    case 0: printf("ENTRADA INVALIDA\n"); 
-                            exit_ = 1;
+
+                if(!strcmp(client_message, "listar_tudo")) {
+                    MYSQL *con = mysql_init(NULL);
+
+                    if (con == NULL) {
+                        fprintf(stderr, "%s\n", mysql_error(con));
+                        exit(1);
+                    }
+
+                    if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
+                        return_error(con);
+                    }
+
+                    /* Select specific database for use */
+                    if (mysql_query(con, "Use "DB";")) {
+                        return_error(con);
+                    } else {
+                        fprintf(stderr, "Succesfully using "DB"\n");
+                    }
+
+                    MYSQL_RES *result;
+                    char query[1000] = "select email from "tabelaUSER";";
+
+                    if (mysql_query(con, query)) {
+                        return_error(con);
+                    } else {
+                        printf("Succesfully got all emails from "tabelaUSER"\n");
+                    }
+
+                    result = mysql_store_result(con);
+                    
+                    if (result == NULL) {
+                        return_error(con);
+                    }
+
+                    int num_fields = mysql_num_fields(result);
+                    int num_rows = mysql_num_rows(result);
+
+                    sprintf(a, "%ld", num_rows);
+                    strcat(a, arroba);
+
+                    bytes_to_write = strlen(a);
+                    get_time(fp);
+
+                    while (bytes_written - bytes_to_write != 0) {
+                        size_t written;
+
+                        do {
+                            written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                        } while((written == -1) && (errno == EINTR));
+
+                        if(written == -1) {
                             break;
-                    case 1: sprintf(a, "%ld", strlen(buffer));
+                        }
+
+                        bytes_written += written;
+                    } 
+
+                    MYSQL_ROW row;
+                    while((row = mysql_fetch_row(result))) {
+                        for(int i = 0; i < num_fields; i++) {
+                            char buffer[BUFF_SIZE] = "";
+                            char image[IMAGE_SIZE] = "";
+                            long int image_size = req6(row[i], buffer, image, con);
+
+                            sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
 
                             bytes_to_write = strlen(a);
-
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            } 
-
                             bytes_written = 0;
-                            bytes_to_write = strlen(buffer);
-
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            } 
-                            break;
-                    default: sprintf(a, "%ld", strlen(buffer));
-                            strcat(a, arroba);
-
-                            bytes_to_write = strlen(a);
                             while (bytes_written - bytes_to_write != 0) {
                                 size_t written;
 
@@ -702,7 +780,7 @@ int main(int argc, char *argv[]) {
                                 bytes_written += written;
                             }
 
-                            sprintf(b, "%ld", r);
+                            sprintf(b, "%ld", image_size);
                             strcat(b, arroba); 
 
                             bytes_written = 0;
@@ -722,7 +800,7 @@ int main(int argc, char *argv[]) {
                             }
 
                             bytes_written = 0;
-                            bytes_to_write = r;
+                            bytes_to_write = image_size;
 
                             while (bytes_written != bytes_to_write) {
                                 size_t written;
@@ -736,9 +814,136 @@ int main(int argc, char *argv[]) {
                                 }
                                 bytes_written += written;
                             }
+                        }
+                    }
 
-                            break;   
+                    mysql_close(con);
+                    
+                } else {
+                    char buffer[BUFF_SIZE] = "";
+                    char image[IMAGE_SIZE] = "";
+                    char a[20] = "";
+                    char b[20] = "";
+                    char *arroba = "@";
+
+                    long int r = treat_call(client_message, buffer, image);
+                    get_time(fp);
+
+                    switch(r) {
+                        case 0: printf("ENTRADA INVALIDA\n"); 
+                                exit_ = 1;
+                                break;
+                        case 1: sprintf(a, "%ld", strlen(buffer));
+                                strcat(a, arroba);
+
+                                bytes_to_write = strlen(a);
+
+                                while (bytes_written - bytes_to_write != 0) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if(written == -1) {
+                                        break;
+                                    }
+
+                                    bytes_written += written;
+                                } 
+
+                                bytes_written = 0;
+                                bytes_to_write = strlen(buffer);
+
+                                while (bytes_written - bytes_to_write != 0) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if(written == -1) {
+                                        break;
+                                    }
+
+                                    bytes_written += written;
+                                } 
+                                break;
+                        default: sprintf(a, "%ld", strlen(buffer));
+                                strcat(a, arroba);
+
+                                bytes_to_write = strlen(a);
+                                while (bytes_written - bytes_to_write != 0) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if(written == -1) {
+                                        break;
+                                    }
+
+                                    bytes_written += written;
+                                }
+
+                                bytes_written = 0;
+                                bytes_to_write = strlen(buffer);
+
+                                while (bytes_written - bytes_to_write != 0) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if(written == -1) {
+                                        break;
+                                    }
+
+                                    bytes_written += written;
+                                }
+
+                                sprintf(b, "%ld", r);
+                                strcat(b, arroba); 
+
+                                bytes_written = 0;
+                                bytes_to_write = strlen(b);
+
+                                while (bytes_written != bytes_to_write) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, b + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if (written == -1) {
+                                        break;
+                                    }
+                                    bytes_written += written;
+                                }
+
+                                bytes_written = 0;
+                                bytes_to_write = r;
+
+                                while (bytes_written != bytes_to_write) {
+                                    size_t written;
+
+                                    do {
+                                        written = send(new_fd, image + bytes_written, (bytes_to_write - bytes_written), 0);
+                                    } while((written == -1) && (errno == EINTR));
+
+                                    if (written == -1) {
+                                        break;
+                                    }
+                                    bytes_written += written;
+                                }
+
+                                break;   
+                    }
+
                 }
+
                 get_time(fp);
                 fprintf(fp, "\n");
                 fflush(fp);
