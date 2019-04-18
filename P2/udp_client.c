@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
         char experiencia[100];
         char email[100];
         char message[300] = "";
+        size_t readThisTime = IMAGE_READ;
 
         switch(input) {
             case 1: printf("Qual curso: ");
@@ -194,7 +195,6 @@ int main(int argc, char *argv[]) {
                 size_t bytesToRead = numbytes;
 
                 while (bytesToRead != bytesRead) {
-                    size_t readThisTime;
                     do {
                         readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
                     } while((readThisTime == -1) && (errno == EINTR));
@@ -256,7 +256,6 @@ int main(int argc, char *argv[]) {
                 bytesToRead = numbytes;
 
                 while (bytesToRead != bytesRead) {
-                    size_t readThisTime;
                     do {
                         readThisTime = recv(sockfd, image + bytesRead, (bytesToRead - bytesRead), 0);
                     } while((readThisTime == -1) && (errno == EINTR));
@@ -313,6 +312,7 @@ int main(int argc, char *argv[]) {
         if(input >= 6) {
             char *email = strtok(message, ";");
             email = strtok (NULL, ";");
+            char buf[10];
             char path[1000] = "dados/";
             strcat(path, email); 
             strcat(path, ".jpg");
@@ -325,14 +325,47 @@ int main(int argc, char *argv[]) {
             FILE *fp = fopen(path, "wb");
             
             char *image = malloc(sizeof(char)*IMAGE_SIZE);
-            int readThisTime = recvfrom(sockfd, image, IMAGE_SIZE, 0, (struct sockaddr *)&their_addr, &addr_len);
 
-            image[readThisTime] = '\0';
+
+            long int received = recvfrom(sockfd, buf, 10, 0, (struct sockaddr *)&their_addr, &addr_len);
+
+            buf[received] = '\0';
+            size_t bytes_read = 0;
+            size_t bytes_to_read = atoi(buf);
+
+            while(bytes_read != bytes_to_read) {
             
+                do {
+                readThisTime = recvfrom(sockfd, image+bytes_read, (bytes_to_read - bytes_read), 0, (struct sockaddr *)&their_addr, &addr_len);
+                } while((readThisTime == -1) && (errno == EINTR));
+
+                if(readThisTime == -1 ) {
+                    break;
+                }
+
+                bytes_read += readThisTime;
+
+            }
+
             printf("listener: got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s));
             printf("listener: packet is %d bytes long\n", readThisTime);
+            printf("Lemos: %d Esperavamos: %d\n", bytes_read, bytes_to_read);
 
-            fwrite(image, 1, strlen(image), fp);
+            size_t bytesToWrite = bytes_read;
+            size_t bytesWritten = 0;
+
+            while (bytesWritten != bytesToWrite) {
+                size_t writtenThisTime;
+                do {
+                   writtenThisTime = fwrite(image, 1, (bytesToWrite - bytesWritten), fp);
+                } while((writtenThisTime == -1) && (errno == EINTR));
+
+                if(writtenThisTime == -1) {
+                    break;
+                }
+
+                bytesWritten += writtenThisTime;
+            }
 
             fclose(fp);
             free(image);

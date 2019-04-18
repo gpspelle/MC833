@@ -898,8 +898,18 @@ int main(int argc, char *argv[]) {
                         break;
                 default:
                         written = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr *)&cliaddr, sin_size);
+                        char a[6];
+                        sprintf(a, "%d", r);
 
-                        written = sendto(sockfd, image, strlen(image), 0, (struct sockaddr *)&cliaddr, sin_size);
+                        sendto(sockfd, a, strlen(a), 0, (struct sockaddr *)&cliaddr, sin_size);
+
+                        size_t bytes_written = 0;
+                        for(int i = 0; i < r / IMAGE_READ; i++) {
+                            written = sendto(sockfd, image + bytes_written, IMAGE_READ, 0, (struct sockaddr *)&cliaddr, sin_size);
+                            bytes_written += written;
+                        }
+                            
+                        written = sendto(sockfd, image + bytes_written, r%IMAGE_READ, 0, (struct sockaddr *)&cliaddr, sin_size);
                         
                         break;   
             }

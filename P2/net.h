@@ -22,6 +22,7 @@
 #define IMAGE_SIZE 200000
 
 #define MAXBUFLEN 100
+#define IMAGE_READ 500
 
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]);
 void *get_in_addr(struct sockaddr *sa);
