@@ -21,6 +21,9 @@
 #define WR_SIZE 1024
 #define IMAGE_SIZE 200000
 
+
+#define UDP_DATASIZE 100
+
 long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char image[100000]);
 void *get_in_addr(struct sockaddr *sa);
 void sigchld_handler(int s);

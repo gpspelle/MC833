@@ -665,19 +665,6 @@ int main(int argc, char *argv[]) {
     setenv("TZ", "PST8PDT", 1);
     tzset();
 
-    int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
-    //socklen_t sin_size;
-    struct sockaddr_in servaddr, cliaddr;
-    //struct sigaction sa;
-    //int yes=1;
-    //char s[INET6_ADDRSTRLEN];
-    //int rv;
-    
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
-        perror("socket creation failed"); 
-        exit(1); 
-    } 
-
     if(argc < 2) {
         printf("Numero invalido de argumentos para o servidor\n");
         return 0;
@@ -688,158 +675,260 @@ int main(int argc, char *argv[]) {
     strcat(path, argv[1]);
     strcat(path, "_servidor.out");
 
-    memset(&servaddr, 0, sizeof servaddr);
-    memset(&cliaddr, 0, sizeof cliaddr);
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    //servaddr.sin_socktype = SOCK_DGRAM;
-    //servaddr.sin_flags = AI_PASSIVE; // use my IP
-
-    /*if ((rv = getaddrinfo(NULL, PORT, &servaddr, &servinfo)) != 0) {
+    int sockfd;
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
+    int numbytes;
+    struct sockaddr_storage their_addr;
+    char buf[MAXBUFLEN];
+    socklen_t addr_len;
+    char s[INET6_ADDRSTRLEN];
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE; // use my IP
+    if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
-    }*/
-
+    }
     // loop through all the results and bind to the first we can
-    /*for(p = servinfo; p != NULL; p = p->ai_next) {
+    for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                        p->ai_protocol)) == -1) {
-            perror("server: socket");
+                p->ai_protocol)) == -1) {
+            perror("listener: socket");
             continue;
         }
-
-        if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
-                        sizeof(int)) == -1) {
-            perror("setsockopt");
-            exit(1);
-        }
-
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("server: bind");
+            perror("listener: bind");
             continue;
         }
-
         break;
-    }*/
-
-    //freeaddrinfo(servinfo); // all done with this structure
-
-    /*if (p == NULL)  {
-        fprintf(stderr, "server: failed to bind\n");
-        exit(1);
-    }*/
-
-    /*sa.sa_handler = sigchld_handler; // reap all dead processes
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("sigaction");
-        exit(1);
-    }*/
-
-    if(bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) { 
-	perror("bind failed"); 
-	exit(EXIT_FAILURE); 
     }
+    if (p == NULL) {
+        fprintf(stderr, "listener: failed to bind socket\n");
+        return 2;
+    }
+    freeaddrinfo(servinfo);
+    printf("listener: waiting to recvfrom...\n");
+    addr_len = sizeof their_addr;
 
-    printf("server: waiting for connections...\n");
     int exit_ = 0;
 
-    while(1) {  // main accept() loop
-        socklen_t sin_size = sizeof cliaddr;
+    socklen_t sin_size = sizeof cliaddr;
 
-        /*inet_ntop(cliaddr.ss_family,
-                get_in_addr((struct sockaddr *)&cliaddr),
-                s, sizeof s);
-        
-        printf("server: got connection from %s\n", s);
-        */
-        FILE *fp = fopen(path, "w");
-        while(!exit_) { //client loop
-            char client_message[BUFF_SIZE] = "";
+    FILE *fp = fopen(path, "w");
+    while(!exit_) { //client loop
+        char client_message[BUFF_SIZE] = "";
+        char a[20] = "";
+        char b[20] = "";
+        char *arroba = "@";
+        long int numbytes = -1;
+        size_t bytes_written = 0;
+        size_t bytes_to_write = 0;
+        //while((recvfrom(sockfd, client_message, BUFF_SIZE, 0, (struct sockaddr *)&cliaddr, &sin_size) <= 0));
+        int received = recvfrom(sockfd, client_message, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &sin_size);
+
+        client_message[received] = '\0';
+
+        printf("client_message: [%s]\n", client_message);
+
+        if(!strcmp(client_message, "listar_tudo")) {
+            MYSQL *con = mysql_init(NULL);
+
+            if (con == NULL) {
+                fprintf(stderr, "%s\n", mysql_error(con));
+                exit(1);
+            }
+
+            if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
+                return_error(con);
+            }
+
+            /* Select specific database for use */
+            if (mysql_query(con, "Use "DB";")) {
+                return_error(con);
+            } else {
+                fprintf(stderr, "Succesfully using "DB"\n");
+            }
+
+            MYSQL_RES *result;
+            char query[1000] = "select email from "tabelaUSER";";
+
+            if (mysql_query(con, query)) {
+                return_error(con);
+            } else {
+                printf("Succesfully got all emails from "tabelaUSER"\n");
+            }
+
+            result = mysql_store_result(con);
+            
+            if (result == NULL) {
+                return_error(con);
+            }
+
+            int num_fields = mysql_num_fields(result);
+            int num_rows = mysql_num_rows(result);
+
+            sprintf(a, "%ld", num_rows);
+            strcat(a, arroba);
+
+            bytes_to_write = strlen(a);
+            get_time(fp);
+
+            while (bytes_written - bytes_to_write != 0) {
+                size_t written;
+
+                do {
+                    written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                } while((written == -1) && (errno == EINTR));
+
+                if(written == -1) {
+                    break;
+                }
+
+                bytes_written += written;
+            } 
+
+            MYSQL_ROW row;
+            while((row = mysql_fetch_row(result))) {
+                for(int i = 0; i < num_fields; i++) {
+                    char buffer[BUFF_SIZE] = "";
+                    char image[IMAGE_SIZE] = "";
+                    long int image_size = req6(row[i], buffer, image, con);
+
+                    sprintf(a, "%ld", strlen(buffer));
+                    strcat(a, arroba);
+
+                    bytes_to_write = strlen(a);
+                    bytes_written = 0;
+                    while (bytes_written - bytes_to_write != 0) {
+                        size_t written;
+
+                        do {
+                            written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                        } while((written == -1) && (errno == EINTR));
+
+                        if(written == -1) {
+                            break;
+                        }
+
+                        bytes_written += written;
+                    }
+
+                    bytes_written = 0;
+                    bytes_to_write = strlen(buffer);
+
+                    while (bytes_written - bytes_to_write != 0) {
+                        size_t written;
+
+                        do {
+                            written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0,  (struct sockaddr *)&cliaddr, sin_size);
+                        } while((written == -1) && (errno == EINTR));
+
+                        if(written == -1) {
+                            break;
+                        }
+
+                        bytes_written += written;
+                    }
+
+                    sprintf(b, "%ld", image_size);
+                    strcat(b, arroba); 
+
+                    bytes_written = 0;
+                    bytes_to_write = strlen(b);
+
+                    while (bytes_written != bytes_to_write) {
+                        size_t written;
+
+                        do {
+                            written = sendto(sockfd, b + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                        } while((written == -1) && (errno == EINTR));
+
+                        if (written == -1) {
+                            break;
+                        }
+                        bytes_written += written;
+                    }
+
+                    bytes_written = 0;
+                    bytes_to_write = image_size;
+
+                    while (bytes_written != bytes_to_write) {
+                        size_t written;
+
+                        do {
+                            written = sendto(sockfd, image + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                        } while((written == -1) && (errno == EINTR));
+
+                        if (written == -1) {
+                            break;
+                        }
+                        bytes_written += written;
+                    }
+                }
+            }
+
+            mysql_close(con);
+            
+        } else {
+            char buffer[BUFF_SIZE] = "";
+            char image[IMAGE_SIZE] = "";
             char a[20] = "";
             char b[20] = "";
             char *arroba = "@";
-            long int numbytes = -1;
-            size_t bytes_written = 0;
-            size_t bytes_to_write = 0;
-            //while((recvfrom(sockfd, client_message, BUFF_SIZE, 0, (struct sockaddr *)&cliaddr, &sin_size) <= 0));
-            int received = recvfrom(sockfd, client_message, BUFF_SIZE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &sin_size);
 
-            client_message[received] = '\0';
+            long int r = treat_call(client_message, buffer, image);
+            printf("Retorno: %d\n", r);
+            printf("Buffer: [%s]\n", buffer);
+            get_time(fp);
 
-            printf("client_message: [%s]\n", client_message);
-
-            if(!strcmp(client_message, "listar_tudo")) {
-                MYSQL *con = mysql_init(NULL);
-
-                if (con == NULL) {
-                    fprintf(stderr, "%s\n", mysql_error(con));
-                    exit(1);
-                }
-
-                if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
-                    return_error(con);
-                }
-
-                /* Select specific database for use */
-                if (mysql_query(con, "Use "DB";")) {
-                    return_error(con);
-                } else {
-                    fprintf(stderr, "Succesfully using "DB"\n");
-                }
-
-                MYSQL_RES *result;
-                char query[1000] = "select email from "tabelaUSER";";
-
-                if (mysql_query(con, query)) {
-                    return_error(con);
-                } else {
-                    printf("Succesfully got all emails from "tabelaUSER"\n");
-                }
-
-                result = mysql_store_result(con);
-                
-                if (result == NULL) {
-                    return_error(con);
-                }
-
-                int num_fields = mysql_num_fields(result);
-                int num_rows = mysql_num_rows(result);
-
-                sprintf(a, "%ld", num_rows);
-                strcat(a, arroba);
-
-                bytes_to_write = strlen(a);
-                get_time(fp);
-
-                while (bytes_written - bytes_to_write != 0) {
-                    size_t written;
-
-                    do {
-                        written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                    } while((written == -1) && (errno == EINTR));
-
-                    if(written == -1) {
+            switch(r) {
+                case -2: printf("ENTRADA INVALIDA\n"); 
+                        exit_ = 1;
                         break;
-                    }
-
-                    bytes_written += written;
-                } 
-
-                MYSQL_ROW row;
-                while((row = mysql_fetch_row(result))) {
-                    for(int i = 0; i < num_fields; i++) {
-                        char buffer[BUFF_SIZE] = "";
-                        char image[IMAGE_SIZE] = "";
-                        long int image_size = req6(row[i], buffer, image, con);
-
+                case -1: 
                         sprintf(a, "%ld", strlen(buffer));
                         strcat(a, arroba);
 
                         bytes_to_write = strlen(a);
+
+                        while (bytes_written - bytes_to_write != 0) {
+                            size_t written;
+
+                            do {
+                                written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                            } while((written == -1) && (errno == EINTR));
+
+                            if(written == -1) {
+                                break;
+                            }
+
+                            bytes_written += written;
+                        } 
+
                         bytes_written = 0;
+                        bytes_to_write = strlen(buffer);
+
+                        while (bytes_written - bytes_to_write != 0) {
+                            size_t written;
+
+                            do {
+                                written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
+                            } while((written == -1) && (errno == EINTR));
+
+                            if(written == -1) {
+                                break;
+                            }
+
+                            bytes_written += written;
+                        } 
+                        break;
+                default: sprintf(a, "%ld", strlen(buffer));
+                        strcat(a, arroba);
+
+                        bytes_to_write = strlen(a);
                         while (bytes_written - bytes_to_write != 0) {
                             size_t written;
 
@@ -861,7 +950,7 @@ int main(int argc, char *argv[]) {
                             size_t written;
 
                             do {
-                                written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0,  (struct sockaddr *)&cliaddr, sin_size);
+                                written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
                             } while((written == -1) && (errno == EINTR));
 
                             if(written == -1) {
@@ -871,7 +960,7 @@ int main(int argc, char *argv[]) {
                             bytes_written += written;
                         }
 
-                        sprintf(b, "%ld", image_size);
+                        sprintf(b, "%ld", r);
                         strcat(b, arroba); 
 
                         bytes_written = 0;
@@ -891,7 +980,7 @@ int main(int argc, char *argv[]) {
                         }
 
                         bytes_written = 0;
-                        bytes_to_write = image_size;
+                        bytes_to_write = r;
 
                         while (bytes_written != bytes_to_write) {
                             size_t written;
@@ -905,147 +994,19 @@ int main(int argc, char *argv[]) {
                             }
                             bytes_written += written;
                         }
-                    }
-                }
 
-                mysql_close(con);
-                
-            } else {
-                char buffer[BUFF_SIZE] = "";
-                char image[IMAGE_SIZE] = "";
-                char a[20] = "";
-                char b[20] = "";
-                char *arroba = "@";
-
-                long int r = treat_call(client_message, buffer, image);
-                printf("Retorno: %d\n", r);
-                printf("Buffer: [%s]\n", buffer);
-                get_time(fp);
-
-                switch(r) {
-                    case -2: printf("ENTRADA INVALIDA\n"); 
-                            exit_ = 1;
-                            break;
-                    case -1: 
-                            sprintf(a, "%ld", strlen(buffer));
-                            strcat(a, arroba);
-
-                            bytes_to_write = strlen(a);
-
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            } 
-
-                            bytes_written = 0;
-                            bytes_to_write = strlen(buffer);
-
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            } 
-                            break;
-                    default: sprintf(a, "%ld", strlen(buffer));
-                            strcat(a, arroba);
-
-                            bytes_to_write = strlen(a);
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, a + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            }
-
-                            bytes_written = 0;
-                            bytes_to_write = strlen(buffer);
-
-                            while (bytes_written - bytes_to_write != 0) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, buffer + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if(written == -1) {
-                                    break;
-                                }
-
-                                bytes_written += written;
-                            }
-
-                            sprintf(b, "%ld", r);
-                            strcat(b, arroba); 
-
-                            bytes_written = 0;
-                            bytes_to_write = strlen(b);
-
-                            while (bytes_written != bytes_to_write) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, b + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if (written == -1) {
-                                    break;
-                                }
-                                bytes_written += written;
-                            }
-
-                            bytes_written = 0;
-                            bytes_to_write = r;
-
-                            while (bytes_written != bytes_to_write) {
-                                size_t written;
-
-                                do {
-                                    written = sendto(sockfd, image + bytes_written, (bytes_to_write - bytes_written), 0, (struct sockaddr *)&cliaddr, sin_size);
-                                } while((written == -1) && (errno == EINTR));
-
-                                if (written == -1) {
-                                    break;
-                                }
-                                bytes_written += written;
-                            }
-
-                            break;   
-                }
-
+                        break;   
             }
 
-            get_time(fp);
-            fprintf(fp, "\n");
-            fflush(fp);
-
         }
-        
-        fclose(fp);    
-    } 
+
+        get_time(fp);
+        fprintf(fp, "\n");
+        fflush(fp);
+
+    }
+    
+    fclose(fp);    
 
     return 0;
 }

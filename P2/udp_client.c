@@ -18,7 +18,6 @@ void get_time(FILE *fp) {
 }
 
 int main(int argc, char *argv[]) {
-
     setenv("TZ", "PST8PDT", 1);
     tzset();
 
@@ -40,49 +39,32 @@ int main(int argc, char *argv[]) {
     FILE *fi = fopen(fi_path, "rb");
 
     int sockfd;
-    //struct addrinfo hints, *servinfo, *p;
-    struct sockaddr_in cliaddr;
-    //int rv;
-    //char s[INET6_ADDRSTRLEN];
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
 
-    memset(&cliaddr, 0, sizeof cliaddr);
-    cliaddr.sin_family = AF_INET;
-    cliaddr.sin_port = htons(intPORT);
-    cliaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-        perror("client: socket");
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+    if ((rv = getaddrinfo("127.0.0.1", SERVERPORT, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+	        return 1;
+    }
+    // loop through all the results and make a socket
+    for(p = servinfo; p != NULL; p = p->ai_next) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                p->ai_protocol)) == -1) {
+            perror("talker: socket");
+            continue;
+        }
+        break;
+    }
+    
+    if (p == NULL) {
+        fprintf(stderr, "talker: failed to create socket\n");
         exit(1);
     }
 
-    /*if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
-            fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-            return 0;
-    }
-
-    // loop through all the results and connect to the first we can
-    for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                        p->ai_protocol)) == -1) {
-            perror("client: socket");
-            continue;
-        }
-
-        break;
-    }
-
-    if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
-        return 0;
-    }
-
-    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
-                    s, sizeof s);
-
-    */
-    printf("client: connecting to %s\n", cliaddr.sin_addr.s_addr);
-
-    //freeaddrinfo(servinfo); // all done with this structure
+    freeaddrinfo(servinfo); // all done with this structure
 
     for(;;) {
         printf("Seja bem vindo ao sistema do cliente. Aqui voce podera realizar as seguintes operacoes: \n");
@@ -304,8 +286,8 @@ int main(int argc, char *argv[]) {
 
                 fclose(fp);
                 free(image);
-                //printf("[%s]\n", buf);
-                //printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+                printf("[%s]\n", buf);
+                printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
             }
    
         } else {
@@ -320,52 +302,9 @@ int main(int argc, char *argv[]) {
             size_t bytes_to_write = 0;
             bytes_to_write = strlen(message);
 
-            while (bytes_written - bytes_to_write != 0) {
-                size_t written;
+            sendto(sockfd, message, UDP_DATASIZE, MSG_CONFIRM, p->ai_addr, p->ai_addrlen);
 
-                do {
-                    written = send(sockfd, message + bytes_written, (bytes_to_write - bytes_written), MSG_CONFIRM);
-                } while((written == -1) && (errno == EINTR));
-
-                printf("Written: %d\n", written);
-                if(written == -1) {
-                    break;
-                }
-
-                bytes_written += written;
-            }
-
-            char a[20] = "";
-
-            while(1) {
-                char kkey0[1] = "";
-                kkey0[0] = '\0';
-                numbytes = recv(sockfd, kkey0, 1, 0); 
-                kkey0[1] = '\0';
-
-                if(*kkey0 == '@') {
-                    break;
-                }
-
-                strcat(a, kkey0);
-            }
-
-            numbytes = atoi(a);
-            size_t bytesRead = 0;
-            size_t bytesToRead = numbytes;
-
-            while (bytesToRead != bytesRead) {
-                size_t readThisTime;
-                do {
-                    readThisTime = recv(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0);
-                } while((readThisTime == -1) && (errno == EINTR));
-
-                if(readThisTime == -1) {
-                    break;
-                }  
-
-                bytesRead += readThisTime;
-            }
+            recvfrom(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0, );
 
             printf("[%s]\n", buf);
             printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
