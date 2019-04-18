@@ -30,6 +30,8 @@ int main(int argc, char *argv[]) {
     /* usage: ./client 1 
               ./client 2 */
     char path[100] = "";
+    struct sockaddr_storage their_addr;
+    socklen_t addr_len = sizeof their_addr;
     strcat(path, argv[1]);
     strcat(path, "_client.out");
     FILE *fp_output = fopen(path, "wb");
@@ -38,6 +40,7 @@ int main(int argc, char *argv[]) {
     strcat(fi_path, ".in");
     FILE *fi = fopen(fi_path, "rb");
 
+    char s[INET6_ADDRSTRLEN];
     int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
@@ -45,7 +48,7 @@ int main(int argc, char *argv[]) {
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
-    if ((rv = getaddrinfo("127.0.0.1", SERVERPORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 	        return 1;
     }
@@ -63,8 +66,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "talker: failed to create socket\n");
         exit(1);
     }
-
-    freeaddrinfo(servinfo); // all done with this structure
 
     for(;;) {
         printf("Seja bem vindo ao sistema do cliente. Aqui voce podera realizar as seguintes operacoes: \n");
@@ -298,22 +299,19 @@ int main(int argc, char *argv[]) {
             long int numbytes = -1;  
             get_time(fp_output);
 
-            size_t bytes_written = 0;
-            size_t bytes_to_write = 0;
-            bytes_to_write = strlen(message);
+            sendto(sockfd, message, strlen(message), 0, p->ai_addr, p->ai_addrlen);
 
-            sendto(sockfd, message, UDP_DATASIZE, MSG_CONFIRM, p->ai_addr, p->ai_addrlen);
+            numbytes = recvfrom(sockfd, buf, MAX_DATA_SIZE-1, 0, (struct sockaddr *)&their_addr, &addr_len);
 
-            recvfrom(sockfd, buf + bytesRead, (bytesToRead - bytesRead), 0, );
-
+            printf("listener: got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s));
+            printf("listener: packet is %d bytes long\n", numbytes);
+            buf[numbytes] = '\0';
             printf("[%s]\n", buf);
-            printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
 
         }
          
         if(input >= 6) {
             char *email = strtok(message, ";");
-            char buf[BUFF_SIZE] = "";
             email = strtok (NULL, ";");
             char path[1000] = "dados/";
             strcat(path, email); 
@@ -325,69 +323,27 @@ int main(int argc, char *argv[]) {
             }
 
             FILE *fp = fopen(path, "wb");
-            int numbytes;
-            char b[20] = "";
-
-            while(1) {
-                char kkey1[1] = "";
-                kkey1[0] = '\0';
-                numbytes = recv(sockfd, kkey1, 1, 0); 
-                kkey1[1] = '\0';
-
-                if(*kkey1 == '@') {
-                    break;
-                }
             
-                strcat(b, kkey1);
-            }
+            char *image = malloc(sizeof(char)*IMAGE_SIZE);
+            int readThisTime = recvfrom(sockfd, image, IMAGE_SIZE, 0, (struct sockaddr *)&their_addr, &addr_len);
 
-            numbytes = atoi(b);
-            char *image = malloc(sizeof(char)*(numbytes+1));
+            image[readThisTime] = '\0';
+            
+            printf("listener: got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s));
+            printf("listener: packet is %d bytes long\n", readThisTime);
 
-            size_t bytesRead = 0;
-            size_t bytesToRead = numbytes;
-
-            while (bytesToRead != bytesRead) {
-                size_t readThisTime;
-                do {
-                    readThisTime = recv(sockfd, image + bytesRead, (bytesToRead - bytesRead), 0);
-                } while((readThisTime == -1) && (errno == EINTR));
-
-                if(readThisTime == -1) {
-                    break;
-                }
-
-                bytesRead += readThisTime;
-            }
-
-
-            size_t bytesToWrite = numbytes;
-            size_t bytesWritten = 0;
-
-            while (bytesWritten != bytesToWrite) {
-                size_t writtenThisTime;
-
-                do {
-                   writtenThisTime = fwrite(image, 1, (bytesToWrite - bytesWritten), fp);
-                } while((writtenThisTime == -1) && (errno == EINTR));
-
-                if(writtenThisTime == -1) {
-                    break;
-                }
-
-                bytesWritten += writtenThisTime;
-            }
+            fwrite(image, 1, strlen(image), fp);
 
             fclose(fp);
             free(image);
-            printf("[%s]\n", buf);
-            printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
         }
 
         get_time(fp_output);
         fprintf(fp_output, "\n");
     }
    
+    freeaddrinfo(servinfo); // all done with this structure
+
     close(sockfd);
     fclose(fp_output); 
     fclose(fi);
