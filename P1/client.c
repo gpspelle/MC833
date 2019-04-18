@@ -295,8 +295,8 @@ int main(int argc, char *argv[]) {
 
                 fclose(fp);
                 free(image);
-                //printf("[%s]\n", buf);
-                //printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
+                printf("[%s]\n", buf);
+                printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
             }
    
         } else {
