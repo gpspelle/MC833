@@ -15,7 +15,7 @@ public class Server implements Interface {
         super();
         String url = "jdbc:mysql://localhost:3306/MC833";
         String login = "root";
-        String senha = null;
+        String senha = "123";
         this.banco = new Database(url, login, senha);
         this.banco.connect();
     }
