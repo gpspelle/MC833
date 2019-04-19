@@ -32,7 +32,6 @@ public class Server implements Interface {
         else if (req==2){
             List<String> lista = banco.op2(par1);
             for (String i : lista) {
-                System.out.println(i),
                 resultado = resultado + i;
             }
         }

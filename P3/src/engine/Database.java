@@ -74,7 +74,7 @@ public class Database {
 
     // Habilidades dos perfis que moram em uma determinada cidade
     public List<String> op2 (String cidade) {
-        String query = "select hab from " + tabelaUSER + " as u, " + tabelaHAB + " as h, where u.Personid = h.Personid and u.residencia'=" + cidade +"';";
+        String query = "select hab from " + tabelaUSER + " as u, " + tabelaHAB + " as h where u.Personid = h.Personid and u.residencia='" + cidade +"';";
         List<String> habs = new ArrayList<>();
         try {
             Statement stm = conn.createStatement();
@@ -128,7 +128,7 @@ public class Database {
 
     // Dado o email, retorna a experiencia
     public String op4 (String email) {
-        String query = "select exp from " + tabelaUSER + " as u, " + tabelaEXP + " as e, where u.Personid = e.Personid and u.email'=" + email +"';";
+        String query = "select exp from " + tabelaUSER + " as u, " + tabelaEXP + " as e where u.Personid = e.Personid and u.email='" + email +"';";
         String exps = "Experiencia: \t\t";
         try {
             Statement stm = conn.createStatement();
@@ -137,7 +137,7 @@ public class Database {
                 ResultSet rs = stm.executeQuery(query);
                 while (rs.next()) {
                     String exp = rs.getString("exp");
-                    exps.concat("(" + Integer.toString(counter) + ")" + exp + "\n\t\t");
+                    exps = exps + "(" + Integer.toString(counter) + ")" + exp + "\n\t\t";
                     counter += 1;
                 }
                 System.out.println("\nConsulta realizada com sucesso!!!\n");
@@ -193,7 +193,7 @@ public class Database {
                     String sobrenome = rs.getString("sobrenome");
                     String residencia = rs.getString("residencia");
                     String formacao = rs.getString("formacao");
-                    info.concat("Email: " + email + "\nNome: " + nome + " Sobrenome: " + sobrenome + "\nResidencia: " + residencia + "\nFormacao: " + formacao + "\n----------------------------------------\n");
+                    info = "Email: " + email + "\nNome: " + nome + " Sobrenome: " + sobrenome + "\nResidencia: " + residencia + "\nFormacao: " + formacao + "\n----------------------------------------\n";
                 }
                 System.out.println("\nConsulta realizada com sucesso!!!\n");
             } catch (Exception ex) {
@@ -205,6 +205,7 @@ public class Database {
             return null;
         }
 
+	System.out.println(info);
         return info;
     }
 
