@@ -8,6 +8,9 @@ import compute.Interface;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 public class Server implements Interface {
     private Database banco;
@@ -69,11 +72,11 @@ public class Server implements Interface {
         PrintWriter pw = null;
 
         try {
-           File file = new File("server_time_" + Integer.toString(req) + ".txt");
+           File file = new File("server_time_" + Long.toString(req) + ".txt");
            FileWriter fw = new FileWriter(file, true);
            pw = new PrintWriter(fw);
-           pw.println(Integer.toString(timeElapsed);
-        } catch (IOException e) {
+           pw.println(Long.toString(timeElapsed));
+        } catch (Exception e) {
            e.printStackTrace();
         } finally {
            if (pw != null) {

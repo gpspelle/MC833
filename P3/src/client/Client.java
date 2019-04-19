@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.util.concurrent.TimeUnit;
+import java.io.PrintWriter;
+import java.io.File;
+import java.io.FileWriter;
 
 public class Client {
     public String requisitar(int req, String par1, String par2, Interface servidor) throws RemoteException{
@@ -30,15 +33,11 @@ public class Client {
         if (req==1){
             System.out.println("Qual curso: ");
             String par1 = reader.readLine();
-            System.out.println(req);
-            System.out.println(par1);
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==2){
             System.out.println("Qual cidade: ");
             String par1 = reader.readLine();
-            System.out.println(req);
-            System.out.println(par1);
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==3){
@@ -46,17 +45,12 @@ public class Client {
             String par1 = reader.readLine();
             System.out.println("Qual email: ");
             String par2 = reader.readLine();
-            System.out.println(req);
-            System.out.println(par1);
-            System.out.println(par2);
             resultado = requisitar(req, par1, par2, servidor);
         }
 
         else if (req==4){
             System.out.println("Qual email: ");
             String par1 = reader.readLine();
-            System.out.println(req);
-            System.out.println(par1);
             resultado = requisitar(req, par1, null, servidor);
         }
 
@@ -66,8 +60,6 @@ public class Client {
         else if (req==6){
             System.out.println("Qual email: ");
             String par1 = reader.readLine();
-            System.out.println(req);
-            System.out.println(par1);
             resultado = requisitar(req, par1, null, servidor);
         }
         else{
@@ -75,16 +67,16 @@ public class Client {
         }
         
         long endTime = System.nanoTime();
-        long timeElapsed = startTime - endTime;
+        long timeElapsed = endTime - startTime;
         
         PrintWriter pw = null;
 
         try {
-           File file = new File("client_time_" + Integer.toString(req) + ".txt");
+           File file = new File("client_time_" + Long.toString(req) + ".txt");
            FileWriter fw = new FileWriter(file, true);
            pw = new PrintWriter(fw);
-           pw.println(Integer.toString(timeElapsed);
-        } catch (IOException e) {
+           pw.println(Long.toString(timeElapsed));
+        } catch (Exception e) {
            e.printStackTrace();
         } finally {
            if (pw != null) {

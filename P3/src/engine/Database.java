@@ -205,7 +205,6 @@ public class Database {
             return null;
         }
 
-	System.out.println(info);
         return info;
     }
 
