@@ -1,4 +1,4 @@
-#include "net.h"
+##include "net.h"
 #include "sql/db.h"
 
 void sigchld_handler(int s) {
@@ -741,6 +741,7 @@ int main(int argc, char *argv[]) {
 
     printf("server: waiting for connections...\n");
 
+    FILE *fp = fopen(path, "w");
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
 
@@ -756,7 +757,6 @@ int main(int argc, char *argv[]) {
         printf("server: got connection from %s\n", s);
         int exit_ = 0;
 
-        FILE *fp = fopen(path, "w");
         if (!fork()) { // this is the child process, used for child
             close(sockfd);
             while(!exit_) { //client loop
