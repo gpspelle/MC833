@@ -1,5 +1,5 @@
 gcc udp_client.c -o udp_client -std=c11 -pedantic -Wall -D_POSIX_C_SOURCE=200809L
-START=1
+START=0
 END=$1
 echo $END
 for ((c=$START; c <= $END; c++))
