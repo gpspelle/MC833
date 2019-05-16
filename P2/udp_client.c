@@ -18,6 +18,11 @@ void get_time(FILE *fp, char *i) {
 }
 
 int main(int argc, char *argv[]) {
+
+    struct timeval timeout;      
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
+
     setenv("TZ", "PST8PDT", 1);
     tzset();
 
@@ -65,6 +70,10 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,
+                                                        sizeof(timeout)) < 0)
+        error("setsockopt failed\n");
+    
     for(;;) {
         printf("Seja bem vindo ao sistema do cliente. Aqui voce podera realizar as seguintes operacoes: \n");
         printf("7. Dado o email de um perfil, retornar seu nome, sobrenome e foto\n");

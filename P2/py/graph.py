@@ -1,4 +1,3 @@
-import scipy as sc
 import sys
 import argparse
 import matplotlib

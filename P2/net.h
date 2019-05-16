@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <strings.h>
+#include <sys/time.h>
 #include <time.h>
 
 #define PORT "7904"  // the port users will be connecting to
