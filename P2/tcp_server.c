@@ -22,12 +22,12 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void get_time(FILE *fp) {
+void get_time(FILE *fp, char *s) {
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     char buff[100];
     strftime(buff, sizeof buff, "%D %T", gmtime(&ts.tv_sec));
-    fprintf(fp, "%s.%09ld;", buff+9, ts.tv_nsec);
+    fprintf(fp, "%s %s.%09ld;", s, buff+9, ts.tv_nsec);
 }
 
 long int req6(char *email, char buffer[BUFF_SIZE], char image[IMAGE_SIZE], MYSQL *con) {
@@ -210,7 +210,9 @@ long int treat_call(char client_message[BUFF_SIZE], char buffer[BUFF_SIZE], char
         fprintf(stderr, "Succesfully using "DB"\n");
     }
 
+    /* Removing client ID */
     command = strtok (client_message, ";");
+    command = strtok (NULL, ";");
     if(!strcmp(command, "listar_curso")) {
         /*listar todas as pessoas formadas em um determinado curso;*/
         char *curso = strtok (NULL, ";");
@@ -754,9 +756,9 @@ int main(int argc, char *argv[]) {
         printf("server: got connection from %s\n", s);
         int exit_ = 0;
 
+        FILE *fp = fopen(path, "w");
         if (!fork()) { // this is the child process, used for child
             close(sockfd);
-            FILE *fp = fopen(path, "w");
             while(!exit_) { //client loop
                 char client_message[BUFF_SIZE] = "";
                 char a[20] = "";
@@ -809,7 +811,7 @@ int main(int argc, char *argv[]) {
                     strcat(a, arroba);
 
                     bytes_to_write = strlen(a);
-                    get_time(fp);
+                    get_time(fp, num);
 
                     while (bytes_written - bytes_to_write != 0) {
                         size_t written;
@@ -914,8 +916,14 @@ int main(int argc, char *argv[]) {
                     char b[20] = "";
                     char *arroba = "@";
 
+                    char num[2];
+                    num[0] = client_message[0];
+                    if(client_message[1] != ';') {
+                        num[1] = client_message[1];
+                    }
+
                     long int r = treat_call(client_message, buffer, image);
-                    get_time(fp);
+                    get_time(fp, num);
 
                     switch(r) {
                         case -2: printf("ENTRADA INVALIDA\n"); 
