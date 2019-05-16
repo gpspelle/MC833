@@ -769,76 +769,62 @@ int main(int argc, char *argv[]) {
                 size_t bytes_to_write = 0;
                 while((recv(new_fd, client_message, BUFF_SIZE, 0)) <= 0);
 
+                char buffer[BUFF_SIZE] = "";
+                char image[IMAGE_SIZE] = "";
 
-                if(!strcmp(client_message, "listar_tudo")) {
-                    MYSQL *con = mysql_init(NULL);
+                char num[2];
+                num[0] = client_message[0];
+                if(client_message[1] != ';') {
+                    num[1] = client_message[1];
+                }
 
-                    if (con == NULL) {
-                        fprintf(stderr, "%s\n", mysql_error(con));
-                        exit(1);
-                    }
+                long int r = treat_call(client_message, buffer, image);
+                get_time(fp, num);
 
-                    if (mysql_real_connect(con, network, userDB, pswd, NULL, 0, NULL, 0) == NULL) {
-                        return_error(con);
-                    }
-
-                    /* Select specific database for use */
-                    if (mysql_query(con, "Use "DB";")) {
-                        return_error(con);
-                    } else {
-                        fprintf(stderr, "Succesfully using "DB"\n");
-                    }
-
-                    MYSQL_RES *result;
-                    char query[1000] = "select email from "tabelaUSER";";
-
-                    if (mysql_query(con, query)) {
-                        return_error(con);
-                    } else {
-                        printf("Succesfully got all emails from "tabelaUSER"\n");
-                    }
-
-                    result = mysql_store_result(con);
-                    
-                    if (result == NULL) {
-                        return_error(con);
-                    }
-
-                    int num_fields = mysql_num_fields(result);
-                    int num_rows = mysql_num_rows(result);
-
-                    sprintf(a, "%ld", num_rows);
-                    strcat(a, arroba);
-
-                    bytes_to_write = strlen(a);
-                    get_time(fp, num);
-
-                    while (bytes_written - bytes_to_write != 0) {
-                        size_t written;
-
-                        do {
-                            written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
-                        } while((written == -1) && (errno == EINTR));
-
-                        if(written == -1) {
+                switch(r) {
+                    case -2: printf("ENTRADA INVALIDA\n"); 
+                            exit_ = 1;
                             break;
-                        }
-
-                        bytes_written += written;
-                    } 
-
-                    MYSQL_ROW row;
-                    while((row = mysql_fetch_row(result))) {
-                        for(int i = 0; i < num_fields; i++) {
-                            char buffer[BUFF_SIZE] = "";
-                            char image[IMAGE_SIZE] = "";
-                            long int image_size = req6(row[i], buffer, image, con);
-
-                            sprintf(a, "%ld", strlen(buffer));
+                    case -1: sprintf(a, "%ld", strlen(buffer));
                             strcat(a, arroba);
 
                             bytes_to_write = strlen(a);
+
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
+                            } 
+
                             bytes_written = 0;
+                            bytes_to_write = strlen(buffer);
+
+                            while (bytes_written - bytes_to_write != 0) {
+                                size_t written;
+
+                                do {
+                                    written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
+                                } while((written == -1) && (errno == EINTR));
+
+                                if(written == -1) {
+                                    break;
+                                }
+
+                                bytes_written += written;
+                            } 
+                            break;
+                    default: sprintf(a, "%ld", strlen(buffer));
+                            strcat(a, arroba);
+
+                            bytes_to_write = strlen(a);
                             while (bytes_written - bytes_to_write != 0) {
                                 size_t written;
 
@@ -870,7 +856,7 @@ int main(int argc, char *argv[]) {
                                 bytes_written += written;
                             }
 
-                            sprintf(b, "%ld", image_size);
+                            sprintf(b, "%ld", r);
                             strcat(b, arroba); 
 
                             bytes_written = 0;
@@ -890,7 +876,7 @@ int main(int argc, char *argv[]) {
                             }
 
                             bytes_written = 0;
-                            bytes_to_write = image_size;
+                            bytes_to_write = r;
 
                             while (bytes_written != bytes_to_write) {
                                 size_t written;
@@ -904,143 +890,11 @@ int main(int argc, char *argv[]) {
                                 }
                                 bytes_written += written;
                             }
-                        }
-                    }
 
-                    mysql_close(con);
-                    
-                } else {
-                    char buffer[BUFF_SIZE] = "";
-                    char image[IMAGE_SIZE] = "";
-                    char a[20] = "";
-                    char b[20] = "";
-                    char *arroba = "@";
-
-                    char num[2];
-                    num[0] = client_message[0];
-                    if(client_message[1] != ';') {
-                        num[1] = client_message[1];
-                    }
-
-                    long int r = treat_call(client_message, buffer, image);
-                    get_time(fp, num);
-
-                    switch(r) {
-                        case -2: printf("ENTRADA INVALIDA\n"); 
-                                exit_ = 1;
-                                break;
-                        case -1: sprintf(a, "%ld", strlen(buffer));
-                                strcat(a, arroba);
-
-                                bytes_to_write = strlen(a);
-
-                                while (bytes_written - bytes_to_write != 0) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if(written == -1) {
-                                        break;
-                                    }
-
-                                    bytes_written += written;
-                                } 
-
-                                bytes_written = 0;
-                                bytes_to_write = strlen(buffer);
-
-                                while (bytes_written - bytes_to_write != 0) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if(written == -1) {
-                                        break;
-                                    }
-
-                                    bytes_written += written;
-                                } 
-                                break;
-                        default: sprintf(a, "%ld", strlen(buffer));
-                                strcat(a, arroba);
-
-                                bytes_to_write = strlen(a);
-                                while (bytes_written - bytes_to_write != 0) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, a + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if(written == -1) {
-                                        break;
-                                    }
-
-                                    bytes_written += written;
-                                }
-
-                                bytes_written = 0;
-                                bytes_to_write = strlen(buffer);
-
-                                while (bytes_written - bytes_to_write != 0) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, buffer + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if(written == -1) {
-                                        break;
-                                    }
-
-                                    bytes_written += written;
-                                }
-
-                                sprintf(b, "%ld", r);
-                                strcat(b, arroba); 
-
-                                bytes_written = 0;
-                                bytes_to_write = strlen(b);
-
-                                while (bytes_written != bytes_to_write) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, b + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if (written == -1) {
-                                        break;
-                                    }
-                                    bytes_written += written;
-                                }
-
-                                bytes_written = 0;
-                                bytes_to_write = r;
-
-                                while (bytes_written != bytes_to_write) {
-                                    size_t written;
-
-                                    do {
-                                        written = send(new_fd, image + bytes_written, (bytes_to_write - bytes_written), 0);
-                                    } while((written == -1) && (errno == EINTR));
-
-                                    if (written == -1) {
-                                        break;
-                                    }
-                                    bytes_written += written;
-                                }
-
-                                break;   
-                    }
-
+                            break;   
                 }
 
-                get_time(fp);
+                get_time(fp, num);
                 fprintf(fp, "\n");
                 fflush(fp);
 

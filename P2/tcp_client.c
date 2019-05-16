@@ -86,18 +86,13 @@ int main(int argc, char *argv[]) {
         printf("7. Dado o email de um perfil, retornar seu nome, sobrenome e foto\n");
 
         char input = argv[2][0];
-        char curso[100];
-        char cidade[100];
-        char experiencia[100];
-        char email[100];
         char message[300] = "";
         strcat(message, argv[1]); 
         strcat(message, ";");
 
         switch(input) {
-            case '7': strcpy(email, argv[3]);
-                    strcat(message, "email_info;");
-                    strcat(message, email);
+            case '7': strcat(message, "email_info;");
+                    strcat(message, argv[3]);
                     break;
             default:
                     close(sockfd);
@@ -108,7 +103,7 @@ int main(int argc, char *argv[]) {
         printf("Message [%s]\n", message);
 
         char buf[MAX_DATA_SIZE] = "";
-        long int numbytes = -1;  
+        int numbytes = -1;  
         get_time(fp_output, argv[1]);
 
         size_t bytes_written = 0;
@@ -165,7 +160,6 @@ int main(int argc, char *argv[]) {
         printf("(%d, %d, %d)\n", bytesRead, bytesToRead, strlen(buf));
 
         char *email = strtok(message, ";");
-        char buf[BUFF_SIZE] = "";
         email = strtok (NULL, ";");
         char path[1000] = "dados/";
         strcat(path, email); 
@@ -177,7 +171,6 @@ int main(int argc, char *argv[]) {
         }
 
         FILE *fp = fopen(path, "wb");
-        int numbytes;
         char b[20] = "";
 
         while(1) {
@@ -196,8 +189,8 @@ int main(int argc, char *argv[]) {
         numbytes = atoi(b);
         char *image = malloc(sizeof(char)*(numbytes+1));
 
-        size_t bytesRead = 0;
-        size_t bytesToRead = numbytes;
+        bytesRead = 0;
+        bytesToRead = numbytes;
 
         while (bytesToRead != bytesRead) {
             size_t readThisTime;
@@ -211,12 +204,6 @@ int main(int argc, char *argv[]) {
 
             bytesRead += readThisTime;
         }
-
-
-        printf("listener: got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s));
-        printf("listener: packet is %d bytes long\n", readThisTime);
-        printf("Lemos: %d Esperavamos: %d\n", bytesRead, bytesToRead);
-
 
         size_t bytesToWrite = bytesRead;
         size_t bytesWritten = 0;
