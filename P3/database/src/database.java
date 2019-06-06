@@ -71,28 +71,140 @@ public class database {
     }
 
     // Habilidades dos perfis que moram em uma determinada cidade
-    public void op2 (String cidade) {
+    public List<String> op2 (String cidade) {
+        String query = "select hab from " + tabelaUSER + " as u, " + tabelaHAB + " as h, where u.Personid = h.Personid and u.residencia'=" + cidade +"';";
+        List<String> habs = new ArrayList<>();
+        try {
+            Statement stm = conn.createStatement();
+            try {
+                ResultSet rs = stm.executeQuery(query);
+                while (rs.next()) {
+                    String hab = rs.getString("hab");
+                    habs.add("Habilidade: " + hab + "\n----------------------------------------\n");
+                }
+                System.out.println("\nConsulta realizada com sucesso!!!\n");
+            } catch (Exception ex) {
+                System.out.println("\nErro no resultset!");
+                return null;
+            }
+        } catch (Exception ex) {
+            System.out.println("\nErro no statement!");
+            return null;
+        }
+
+        return habs;
 
     }
 
     // Adicionar Nova Experiencia em um Perfil
-    public void op3 (String exp, String email) {
+    public boolean op3 (String exp, String email) {
+        String query = "select Personid from " + tabelaUSER + " where email='" + email +"';";
+        try {
+            Statement stm = conn.createStatement();
+            try {
+                ResultSet rs = stm.executeQuery(query);
+                String id="";
+                while (rs.next()) {
+                    id = rs.getString("Personid");
+                }
+                System.out.println("\nConsulta realizada parcialmente com sucesso!!!\n");
+                query = "insert into " + tabelaEXP + " (Personid, exp) VALUES(" + id + ", '" + exp + "');";
+                if (!stm.execute(query)) {
+                    return false;
+                }
 
+            } catch (Exception ex) {
+                System.out.println("\nErro no resultset!");
+                return false;
+            }
+        } catch (Exception ex) {
+            System.out.println("\nErro no statement!");
+            return false;
+        }
+
+        return true;
     }
 
     // Dado o email, retorna a experiencia
-    public void op4 (String email) {
+    public String op4 (String email) {
+        String query = "select exp from " + tabelaUSER + " as u, " + tabelaEXP + " as e, where u.Personid = e.Personid and u.email'=" + email +"';";
+        String exps = "Experiencia: \t\t";
+        try {
+            Statement stm = conn.createStatement();
+            try {
+                int counter = 1;
+                ResultSet rs = stm.executeQuery(query);
+                while (rs.next()) {
+                    String exp = rs.getString("exp");
+                    exps.concat("(" + Integer.toString(counter) + ")" + exp + "\n\t\t");
+                    counter += 1;
+                }
+                System.out.println("\nConsulta realizada com sucesso!!!\n");
+            } catch (Exception ex) {
+                System.out.println("\nErro no resultset!");
+                return null;
+            }
+        } catch (Exception ex) {
+            System.out.println("\nErro no statement!");
+            return null;
+        }
+
+        return exps;
 
     }
 
     // Todas as informaçoes de todos os perfis
-    public void op5 () {
+    public List<String> op5 () {
+        String query = "select email from " + tabelaUSER + ";";
+        List<String> users = new ArrayList<>();
+         try {
+            Statement stm = conn.createStatement();
+            try {
+                ResultSet rs = stm.executeQuery(query);
+                while (rs.next()) {
+                    String email = rs.getString("email");
+                    users.add(op6(email));
+                }
+                System.out.println("\nConsulta realizada com sucesso!!!\n");
+            } catch (Exception ex) {
+                System.out.println("\nErro no resultset!");
+                return null;
+            }
+        } catch (Exception ex) {
+            System.out.println("\nErro no statement!");
+            return null;
+        }
+
+        return users;
 
     }
 
     // Dado o email, retornar as informaçoes
-    public void op6 (String email) {
+    public String op6 (String email) {
+        String query = "select email, nome, sobrenome, residencia, formacao from " + tabelaUSER + " where email='" + email + "';";
+        String info = "";
+        try {
+            Statement stm = conn.createStatement();
+            try {
+                ResultSet rs = stm.executeQuery(query);
+                while (rs.next()) {
+                    String nome = rs.getString("nome");
+                    String sobrenome = rs.getString("sobrenome");
+                    String residencia = rs.getString("residencia");
+                    String formacao = rs.getString("formacao");
+                    info.concat("Email: " + email + "\nNome: " + nome + " Sobrenome: " + sobrenome + "\nResidencia: " + residencia + "\nFormacao: " + formacao + "\n----------------------------------------\n");
+                }
+                System.out.println("\nConsulta realizada com sucesso!!!\n");
+            } catch (Exception ex) {
+                System.out.println("\nErro no resultset!");
+                return null;
+            }
+        } catch (Exception ex) {
+            System.out.println("\nErro no statement!");
+            return null;
+        }
 
+        return info;
     }
 
 
