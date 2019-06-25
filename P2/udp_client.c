@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         }
         break;
     }
-    
+
     if (p == NULL) {
         fprintf(stderr, "talker: failed to create socket\n");
         exit(1);
@@ -105,7 +105,6 @@ int main(int argc, char *argv[]) {
         sendto(sockfd, message, strlen(message), 0, p->ai_addr, p->ai_addrlen);
 
         numbytes = recvfrom(sockfd, buf, MAX_DATA_SIZE-1, 0, (struct sockaddr *)&their_addr, &addr_len);
-
         char num = buf[0];
         if (num != '0') {
             fprintf(fp_output, "%s FAILED - RECEIVED OUT OF ORDER MESSAGE %c\n", argv[1], num);
@@ -244,12 +243,10 @@ int main(int argc, char *argv[]) {
         break;
     }
 
-   
     freeaddrinfo(servinfo); // all done with this structure
 
     close(sockfd);
     fclose(fp_output); 
-
     return 0;
 
 }
