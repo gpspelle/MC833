@@ -93,7 +93,6 @@ public class Database {
             System.out.println("\nErro no statement!");
             return null;
         }
-
         return habs;
 
     }

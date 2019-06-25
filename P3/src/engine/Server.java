@@ -22,17 +22,17 @@ public class Server implements Interface {
 
     public String executeTask(int req, String par1, String par2) {
         //realizar consulta no banco de dados
-        String resultado = null;
+        String resultado = "";
         if (req==1){
             List<String> lista = banco.op1(par1);
             for (String i : lista) {
                 resultado = resultado + i;
             }
-            resultado = resultado + par1;
         }
         else if (req==2){
             List<String> lista = banco.op2(par1);
             for (String i : lista) {
+                System.out.println(i),
                 resultado = resultado + i;
             }
         }
