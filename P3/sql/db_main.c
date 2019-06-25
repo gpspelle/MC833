@@ -9,7 +9,7 @@ int main() {
         exit(1);
     }
 
-    if (mysql_real_connect(con_root, network, rootDB, pswd_root, NULL, 0, NULL, 0) == NULL) {
+    if (mysql_real_connect(con_root, network, rootDB, NULL, NULL, 0, NULL, 0) == NULL) {
         return_error(con_root);
     }
 

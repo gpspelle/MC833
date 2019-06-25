@@ -147,66 +147,66 @@ void add_user(MYSQL *con, userT *u, char *cwd) {
     char photo_path[1024];
     strcpy(photo_path, cwd);
     strcat(photo_path, u->foto);
-    FILE *fp = fopen(photo_path, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "cannot open image file %s\n", photo_path);
-        exit(1);
-    }
-
-    fseek(fp, 0, SEEK_END);
-
-    if (ferror(fp)) {
-
-        fprintf(stderr, "fseek() failed\n");
-        int r = fclose(fp);
-
-        if (r == EOF) {
-            fprintf(stderr, "cannot close file handler\n");
-        }
-
-        exit(1);
-    }
-
-    int flen = ftell(fp);
-
-    if (flen == -1) {
-
-        perror("error occurred");
-        int r = fclose(fp);
-
-        if (r == EOF) {
-            fprintf(stderr, "cannot close file handler\n");
-        }
-        exit(1);
-    }
-
-    fseek(fp, 0, SEEK_SET);
-
-    if (ferror(fp)) {
-        fprintf(stderr, "fseek() failed\n");
-        int r = fclose(fp);
-        if (r == EOF) {
-            fprintf(stderr, "cannot close file handler\n");
-        }
-        exit(1);
-    }
-
-    char data[flen+1];
-    fread(data, 1, flen, fp);
-
-    if (ferror(fp)) {
-        fprintf(stderr, "fread() failed\n");
-        int r = fclose(fp);
-        if (r == EOF) {
-            fprintf(stderr, "cannot close file handler\n");
-        }
-        exit(1);
-    }
-
-    int r = fclose(fp);
-    if (r == EOF) {
-        fprintf(stderr, "cannot close file handler\n");
-    }
+    // FILE *fp = fopen(photo_path, "rb");
+    // if (fp == NULL) {
+    //     fprintf(stderr, "cannot open image file %s\n", photo_path);
+    //     exit(1);
+    // }
+    //
+    // fseek(fp, 0, SEEK_END);
+    //
+    // if (ferror(fp)) {
+    //
+    //     fprintf(stderr, "fseek() failed\n");
+    //     int r = fclose(fp);
+    //
+    //     if (r == EOF) {
+    //         fprintf(stderr, "cannot close file handler\n");
+    //     }
+    //
+    //     exit(1);
+    // }
+    //
+    // int flen = ftell(fp);
+    //
+    // if (flen == -1) {
+    //
+    //     perror("error occurred");
+    //     int r = fclose(fp);
+    //
+    //     if (r == EOF) {
+    //         fprintf(stderr, "cannot close file handler\n");
+    //     }
+    //     exit(1);
+    // }
+    //
+    // fseek(fp, 0, SEEK_SET);
+    //
+    // if (ferror(fp)) {
+    //     fprintf(stderr, "fseek() failed\n");
+    //     int r = fclose(fp);
+    //     if (r == EOF) {
+    //         fprintf(stderr, "cannot close file handler\n");
+    //     }
+    //     exit(1);
+    // }
+    //
+    // char data[flen+1];
+    // fread(data, 1, flen, fp);
+    //
+    // if (ferror(fp)) {
+    //     fprintf(stderr, "fread() failed\n");
+    //     int r = fclose(fp);
+    //     if (r == EOF) {
+    //         fprintf(stderr, "cannot close file handler\n");
+    //     }
+    //     exit(1);
+    // }
+    //
+    // int r = fclose(fp);
+    // if (r == EOF) {
+    //     fprintf(stderr, "cannot close file handler\n");
+    // }
 
     char query[100000] = "INSERT INTO "tabelaUSER" (email, nome, sobrenome, foto, residencia, formacao) VALUES('";
     strcat(query, u->email);

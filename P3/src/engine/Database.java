@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class database {
+public class Database {
 
     private static final String PORT = "7904";
     private static final int BACKLOG = 20;
@@ -21,7 +21,7 @@ public class database {
     private String senha;
     private Connection conn;
 
-    public database(String url, String login, String senha) {
+    public Database(String url, String login, String senha) {
         this.url = url;
         this.login = login;
         this.senha = senha;
@@ -231,4 +231,3 @@ public class database {
         }
     }
 }
-

@@ -81,7 +81,7 @@ public class Client {
 
     public static void main(String args[]) throws IOException {
         Interface servidor = null;
-        
+
         try {
             String name = "Interface";
             Registry registry = LocateRegistry.getRegistry(null, 9999); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts

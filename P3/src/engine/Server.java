@@ -6,17 +6,18 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import compute.Interface;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Server implements Interface {
+    private Database banco;
 
     public Server() {
-
+        super();
         String url = "jdbc:mysql://localhost:3306/MC833";
         String login = "root";
-        String senha = "123";
-        this.database banco = new database(url, login, senha);
+        String senha = null;
+        this.banco = new Database(url, login, senha);
         this.banco.connect();
-        super();
     }
 
     public String executeTask(int req, String par1, String par2) {
@@ -27,7 +28,6 @@ public class Server implements Interface {
             for (String i : lista) {
                 resultado = resultado + i;
             }
-            resultado = "recebi req 1";
             resultado = resultado + par1;
         }
         else if (req==2){
@@ -35,7 +35,6 @@ public class Server implements Interface {
             for (String i : lista) {
                 resultado = resultado + i;
             }
-            resultado = "recebi req 2";
         }
         else if (req==3){
             boolean success = banco.op3(par1, par2);
@@ -45,12 +44,10 @@ public class Server implements Interface {
             else {
                 resultado = "Falha";
             }
-            resultado = "recebi req 3";
         }
 
         else if (req==4){
             resultado = banco.op4(par1);
-            resultado = "recebi req 4";
         }
 
         else if (req==5) {
@@ -58,12 +55,10 @@ public class Server implements Interface {
             for (String i : lista) {
                 resultado = resultado + i;
             }
-            resultado = "recebi req 5";
         }
 
         else if (req==6){
             resultado = banco.op6(par1);
-            resultado = "recebi req 6";
         }
         return resultado;
     }
