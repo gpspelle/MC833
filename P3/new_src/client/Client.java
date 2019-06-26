@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.net.MalformedURLException;
+import java.rmi.*;
 
 public class Client {
     public String requisitar(int req, String par1, String par2, Interface servidor) throws RemoteException{
@@ -90,18 +91,13 @@ public class Client {
 
     public static void main(String args[]) throws IOException {
 
-        String remoteHostName = "giovanna-VirtualBox";
-        int remotePort = 9999;
+        String serverIP = "177.220.85.232";
+        int serverPort = 9999;
         String name = "Interface";
-        String connectLocation = "//" + remoteHostName + ":" + remotePort + name;
 
         Interface servidor = null;
         try {
-            System.out.println("Connecting to client at : " + connectLocation);
-            servidor = (Interface) Naming.lookup(connectLocation);
-        } catch (MalformedURLException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            servidor = (Interface) Naming.lookup("rmi://" + serverIP + ":" + serverPort + "/" + name);
         } catch (RemoteException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -110,6 +106,7 @@ public class Client {
             e1.printStackTrace();
         }
 
+        System.out.println(servidor);
         Client cliente = new Client();
         System.out.println("Seja bem vindo ao sistema do cliente. Aqui voce podera realizar as seguintes operacoes: \n");
         System.out.println("1. Listar todas as pessoas formadas em um determinado curso;\n");

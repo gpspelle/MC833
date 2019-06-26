@@ -107,7 +107,7 @@ public class Server implements Interface {
         String hostname = "177.220.85.232";    
 	System.setProperty("java.rmi.server.hostname", hostname);
 
-        String bindLocation = "//" + hostname + ":" + port + name;
+        String bindLocation = "rmi://" + hostname + ":" + port + "/" + name;
 
         try { 
             Naming.bind(bindLocation, engine);
