@@ -1,5 +1,6 @@
 package engine;
 
+import java.rmi.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -103,7 +104,8 @@ public class Server implements Interface {
             System.err.println("Server exception");
         }
         
-        String hostname = "0.0.0.0";    
+        String hostname = "177.220.85.232";    
+	System.setProperty("java.rmi.server.hostname", hostname);
 
         String bindLocation = "//" + hostname + ":" + port + name;
 
@@ -116,6 +118,6 @@ public class Server implements Interface {
             System.out.println("Server failed: " + e);
         }
         
-        registry.rebind(name, stub);
+        //registry.rebind(name, stub);
     }
 }
