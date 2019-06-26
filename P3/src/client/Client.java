@@ -14,13 +14,25 @@ import java.io.File;
 import java.io.FileWriter;
 
 public class Client {
-    public String requisitar(int req, String par1, String par2, Interface servidor) throws RemoteException{
+    Interface servidor = null;
+    public Client() {
+      try {
+          String name = "Interface";
+          Registry registry = LocateRegistry.getRegistry("177.220.85.173", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+          this.servidor = (Interface) registry.lookup(name);
+      } catch (Exception e) {
+          System.err.println("Client exception:");
+          e.printStackTrace();
+      }
+    }
+
+    public String requisitar(int req, String par1, String par2) throws RemoteException{
         //realizar a requisição e obter o retorno
-        String resultado=servidor.executeTask(req, par1, par2);
+        String resultado = this.servidor.executeTask(req, par1, par2);
         return resultado;
     }
 
-    public String leitura(Interface servidor) throws IOException{
+    public String leitura() throws IOException{
         //realizar a leitura da entrada do cliente
         String resultado;
         Scanner in = new Scanner(System.in);
@@ -33,34 +45,34 @@ public class Client {
         if (req==1){
             System.out.println("Qual curso: ");
 	    String par1 = in.nextLine();
-            resultado = requisitar(req, par1, null, servidor);
+            resultado = requisitar(req, par1, null);
         }
         else if (req==2){
             System.out.println("Qual cidade: ");
 	    String par1 = in.nextLine();
-            resultado = requisitar(req, par1, null, servidor);
+            resultado = requisitar(req, par1, null);
         }
         else if (req==3){
             System.out.println("Qual experiencia: ");
 	    String par1 = in.nextLine();
             System.out.println("Qual email: ");
 	    String par2 = in.nextLine();
-            resultado = requisitar(req, par1, par2, servidor);
+            resultado = requisitar(req, par1, par2);
         }
 
         else if (req==4){
             System.out.println("Qual email: ");
 	    String par1 = in.nextLine();
-            resultado = requisitar(req, par1, null, servidor);
+            resultado = requisitar(req, par1, null);
         }
 
         else if (req==5) {
-            resultado = requisitar(req, null, null, servidor);
+            resultado = requisitar(req, null, null);
         }
         else if (req==6){
             System.out.println("Qual email: ");
 	    String par1 = in.nextLine();
-            resultado = requisitar(req, par1, null, servidor);
+            resultado = requisitar(req, par1, null);
         }
         else{
             resultado = "Requisição Inválida";
@@ -88,16 +100,6 @@ public class Client {
     }
 
     public static void main(String args[]) throws IOException {
-        Interface servidor = null;
-
-        try {
-            String name = "Interface";
-            Registry registry = LocateRegistry.getRegistry("177.220.85.173", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
-            servidor = (Interface) registry.lookup(name);
-        } catch (Exception e) {
-            System.err.println("Client exception:");
-            e.printStackTrace();
-        }
 
         Client cliente = new Client();
         System.out.println("Seja bem vindo ao sistema do cliente. Aqui voce podera realizar as seguintes operacoes: \n");
@@ -107,7 +109,7 @@ public class Client {
         System.out.println("4. Dado o email do perfil, retornar suas experiencias;\n");
         System.out.println("5. Listar todas as informacoes de todos os perfis;\n");
         System.out.println("6. Dado o email de um perfil, retornar suas informacoes;\n");
-        String resultado=cliente.leitura(servidor);
+        String resultado=cliente.leitura();
         System.out.println(resultado);
     }
 }

@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 public class Server implements Interface {
-    private Database banco;
+    public Database banco;
 
     public Server() {
         super();
@@ -101,12 +101,12 @@ public class Server implements Interface {
         String url = "jdbc:mysql://localhost:3306/MC833";
         String login = "root";
         String senha = "123";
-        this.banco = new Database(url, login, null);
-        this.banco.connect();
 
         try {
             String name = "Interface";
             Interface engine = new Server();
+            ((Server) engine).banco = new Database(url, login, null);
+            ((Server) engine).banco.connect();
             Interface stub = (Interface) UnicastRemoteObject.exportObject(engine, 0);
 
             System.setProperty("java.rmi.server.hostname", getIP());
