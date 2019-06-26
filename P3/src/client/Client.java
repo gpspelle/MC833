@@ -8,6 +8,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.RemoteException;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     public String requisitar(int req, String par1, String par2, Interface servidor) throws RemoteException{
@@ -24,12 +25,13 @@ public class Client {
                 new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Escolha uma requisição: ");
         int req = in.nextInt();
+
+        long startTime = System.nanoTime();
         if (req==1){
             System.out.println("Qual curso: ");
             String par1 = reader.readLine();
             System.out.println(req);
             System.out.println(par1);
-            System.out.println("Chamar função 1");
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==2){
@@ -37,7 +39,6 @@ public class Client {
             String par1 = reader.readLine();
             System.out.println(req);
             System.out.println(par1);
-            System.out.println("Chamar função 2");
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==3){
@@ -48,7 +49,6 @@ public class Client {
             System.out.println(req);
             System.out.println(par1);
             System.out.println(par2);
-            System.out.println("Chamar função 3");
             resultado = requisitar(req, par1, par2, servidor);
         }
 
@@ -57,12 +57,10 @@ public class Client {
             String par1 = reader.readLine();
             System.out.println(req);
             System.out.println(par1);
-            System.out.println("Chamar função 4");
             resultado = requisitar(req, par1, null, servidor);
         }
 
         else if (req==5) {
-            System.out.println("Chamar função 5");
             resultado = requisitar(req, null, null, servidor);
         }
         else if (req==6){
@@ -70,12 +68,30 @@ public class Client {
             String par1 = reader.readLine();
             System.out.println(req);
             System.out.println(par1);
-            System.out.println("Chamar função 6");
             resultado = requisitar(req, par1, null, servidor);
         }
         else{
             resultado = "Requisição Inválida";
         }
+        
+        long endTime = System.nanoTime();
+        long timeElapsed = startTime - endTime;
+        
+        PrintWriter pw = null;
+
+        try {
+           File file = new File("client_time_" + Integer.toString(req) + ".txt");
+           FileWriter fw = new FileWriter(file, true);
+           pw = new PrintWriter(fw);
+           pw.println(Integer.toString(timeElapsed);
+        } catch (IOException e) {
+           e.printStackTrace();
+        } finally {
+           if (pw != null) {
+              pw.close();
+           }
+        } 
+
         return resultado;
     }
 

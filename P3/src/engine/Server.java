@@ -7,6 +7,7 @@ import java.rmi.server.UnicastRemoteObject;
 import compute.Interface;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class Server implements Interface {
     private Database banco;
@@ -23,6 +24,8 @@ public class Server implements Interface {
     public String executeTask(int req, String par1, String par2) {
         //realizar consulta no banco de dados
         String resultado = "";
+
+        long startTime = System.nanoTime();
         if (req==1){
             List<String> lista = banco.op1(par1);
             for (String i : lista) {
@@ -59,6 +62,25 @@ public class Server implements Interface {
         else if (req==6){
             resultado = banco.op6(par1);
         }
+        
+        long endTime = System.nanoTime();
+        long timeElapsed = endTime - startTime;
+        
+        PrintWriter pw = null;
+
+        try {
+           File file = new File("server_time_" + Integer.toString(req) + ".txt");
+           FileWriter fw = new FileWriter(file, true);
+           pw = new PrintWriter(fw);
+           pw.println(Integer.toString(timeElapsed);
+        } catch (IOException e) {
+           e.printStackTrace();
+        } finally {
+           if (pw != null) {
+              pw.close();
+           }
+        }
+
         return resultado;
     }
 
