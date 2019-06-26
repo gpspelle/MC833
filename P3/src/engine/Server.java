@@ -20,11 +20,7 @@ public class Server implements Interface {
 
     public Server() {
         super();
-        String url = "jdbc:mysql://localhost:3306/MC833";
-        String login = "root";
-        String senha = "123";
-        this.banco = new Database(url, login, senha);
-        this.banco.connect();
+        this.banco = null;
     }
 
     public String executeTask(int req, String par1, String par2) {
@@ -90,7 +86,7 @@ public class Server implements Interface {
         return resultado;
     }
 
-    public static String getIP(){
+    public static String getIP() throws UnknownHostException{
       DatagramSocket socket = null;
       try {
         socket = new DatagramSocket();
@@ -102,6 +98,11 @@ public class Server implements Interface {
     }
     public static void main(String[] args) {
 
+        String url = "jdbc:mysql://localhost:3306/MC833";
+        String login = "root";
+        String senha = "123";
+        this.banco = new Database(url, login, null);
+        this.banco.connect();
 
         try {
             String name = "Interface";
