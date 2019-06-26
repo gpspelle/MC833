@@ -27,30 +27,30 @@ public class Client {
         BufferedReader reader =
                 new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Escolha uma requisição: ");
-        int req = in.nextInt();
-
+        String req_ = in.nextLine();
+	int req = Integer.parseInt(req_);
         long startTime = System.nanoTime();
         if (req==1){
             System.out.println("Qual curso: ");
-            String par1 = reader.readLine();
+	    String par1 = in.nextLine();
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==2){
             System.out.println("Qual cidade: ");
-            String par1 = reader.readLine();
+	    String par1 = in.nextLine();
             resultado = requisitar(req, par1, null, servidor);
         }
         else if (req==3){
             System.out.println("Qual experiencia: ");
-            String par1 = reader.readLine();
+	    String par1 = in.nextLine();
             System.out.println("Qual email: ");
-            String par2 = reader.readLine();
+	    String par2 = in.nextLine();
             resultado = requisitar(req, par1, par2, servidor);
         }
 
         else if (req==4){
             System.out.println("Qual email: ");
-            String par1 = reader.readLine();
+	    String par1 = in.nextLine();
             resultado = requisitar(req, par1, null, servidor);
         }
 
@@ -59,7 +59,7 @@ public class Client {
         }
         else if (req==6){
             System.out.println("Qual email: ");
-            String par1 = reader.readLine();
+	    String par1 = in.nextLine();
             resultado = requisitar(req, par1, null, servidor);
         }
         else{

@@ -89,17 +89,20 @@ public class Server implements Interface {
 
     public static void main(String[] args) {
 
+
         try {
             String name = "Interface";
             Interface engine = new Server();
             Interface stub =
                     (Interface) UnicastRemoteObject.exportObject(engine, 0);
             Registry registry = LocateRegistry.createRegistry(9999);
+	    System.setProperty("java.rmi.server.hostname", "");
             registry.rebind(name, stub);
             System.out.println("Servidor up");
         } catch (Exception e) {
             System.err.println("Server exception:");
             e.printStackTrace();
+
         }
     }
 }
