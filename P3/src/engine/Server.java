@@ -1,5 +1,8 @@
 package engine;
 
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -65,10 +68,10 @@ public class Server implements Interface {
         else if (req==6){
             resultado = banco.op6(par1);
         }
-        
+
         long endTime = System.nanoTime();
         long timeElapsed = endTime - startTime;
-        
+
         PrintWriter pw = null;
 
         try {
@@ -87,16 +90,27 @@ public class Server implements Interface {
         return resultado;
     }
 
+    public static String getIP(){
+      DatagramSocket socket = null;
+      try {
+        socket = new DatagramSocket();
+        socket.connect(InetAddress.getByName("8.8.8.8"), 10002);
+        return socket.getLocalAddress().getHostAddress();
+      } catch(Exception ex) {
+        return InetAddress.getLocalHost().getHostAddress();
+      }
+    }
     public static void main(String[] args) {
 
 
         try {
             String name = "Interface";
             Interface engine = new Server();
-            Interface stub =
-                    (Interface) UnicastRemoteObject.exportObject(engine, 0);
-            Registry registry = LocateRegistry.createRegistry(9999);
-	    System.setProperty("java.rmi.server.hostname", "");
+            Interface stub = (Interface) UnicastRemoteObject.exportObject(engine, 0);
+
+            System.setProperty("java.rmi.server.hostname", getIP());
+
+            Registry registry = LocateRegistry.createRegistry(1337);
             registry.rebind(name, stub);
             System.out.println("Servidor up");
         } catch (Exception e) {

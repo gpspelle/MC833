@@ -65,10 +65,10 @@ public class Client {
         else{
             resultado = "Requisição Inválida";
         }
-        
+
         long endTime = System.nanoTime();
         long timeElapsed = endTime - startTime;
-        
+
         PrintWriter pw = null;
 
         try {
@@ -82,7 +82,7 @@ public class Client {
            if (pw != null) {
               pw.close();
            }
-        } 
+        }
 
         return resultado;
     }
@@ -92,7 +92,7 @@ public class Client {
 
         try {
             String name = "Interface";
-            Registry registry = LocateRegistry.getRegistry(null, 9999); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+            Registry registry = LocateRegistry.getRegistry("177.220.85.173", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
             servidor = (Interface) registry.lookup(name);
         } catch (Exception e) {
             System.err.println("Client exception:");
