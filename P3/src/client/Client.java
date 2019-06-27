@@ -18,6 +18,21 @@ public class Client {
     public Client() {
       try {
           String name = "Projeto";
+          /*Registry registry = LocateRegistry.getRegistry("177.220.84.142", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+	  System.out.println("Registry: " + registry);
+          this.servidor = (Projeto) registry.lookup(name);
+	  System.out.println(this.servidor);
+	  
+          System.out.println("Escolha uma requisição: ");
+          Scanner in = new Scanner(System.in);
+          String req_ = in.nextLine();
+          int req = Integer.parseInt(req_);
+          System.out.println("Qual curso: ");
+	  String par1 = in.nextLine();
+	  String par2 = null;
+	  System.out.println(this.servidor);
+          String resultado = this.servidor.executeTask(req, par1, par2);
+	  System.out.println("Got here");*/
           Registry registry = LocateRegistry.getRegistry("177.220.85.232", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
           this.servidor = (Projeto) registry.lookup(name);
       } catch (Exception e) {
@@ -28,6 +43,7 @@ public class Client {
 
     public String requisitar(int req, String par1, String par2) throws RemoteException{
         //realizar a requisição e obter o retorno
+	System.out.println(servidor);
         String resultado = this.servidor.executeTask(req, par1, par2);
         return resultado;
     }
