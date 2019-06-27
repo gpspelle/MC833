@@ -2,7 +2,7 @@ package client;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import compute.Interface;
+import compute.Projeto;
 import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,12 +14,12 @@ import java.io.File;
 import java.io.FileWriter;
 
 public class Client {
-    Interface servidor = null;
+    Projeto servidor = null;
     public Client() {
       try {
-          String name = "Interface";
-          Registry registry = LocateRegistry.getRegistry("177.220.85.173", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
-          this.servidor = (Interface) registry.lookup(name);
+          String name = "Projeto";
+          Registry registry = LocateRegistry.getRegistry("177.220.85.232", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+          this.servidor = (Projeto) registry.lookup(name);
       } catch (Exception e) {
           System.err.println("Client exception:");
           e.printStackTrace();
