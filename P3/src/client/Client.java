@@ -18,7 +18,7 @@ public class Client {
     public Client() {
       try {
           String name = "Projeto";
-          Registry registry = LocateRegistry.getRegistry("177.220.84.142", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+          /*Registry registry = LocateRegistry.getRegistry("177.220.84.142", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
 	  System.out.println("Registry: " + registry);
           this.servidor = (Projeto) registry.lookup(name);
 	  System.out.println(this.servidor);
@@ -32,7 +32,9 @@ public class Client {
 	  String par2 = null;
 	  System.out.println(this.servidor);
           String resultado = this.servidor.executeTask(req, par1, par2);
-	  System.out.println("Got here");
+	  System.out.println("Got here");*/
+          Registry registry = LocateRegistry.getRegistry("177.220.85.232", 1337); //pegando localhost, necessário passar URL em null para comunicação entre 2 hosts
+          this.servidor = (Projeto) registry.lookup(name);
       } catch (Exception e) {
           System.err.println("Client exception:");
           e.printStackTrace();
@@ -123,7 +125,7 @@ public class Client {
         System.out.println("4. Dado o email do perfil, retornar suas experiencias;\n");
         System.out.println("5. Listar todas as informacoes de todos os perfis;\n");
         System.out.println("6. Dado o email de um perfil, retornar suas informacoes;\n");
-        //String resultado=cliente.leitura();
-        //System.out.println(resultado);
+        String resultado=cliente.leitura();
+        System.out.println(resultado);
     }
 }

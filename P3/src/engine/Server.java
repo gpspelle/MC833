@@ -100,7 +100,7 @@ public class Server implements Projeto {
 
         String url = "jdbc:mysql://localhost:3306/MC833";
         String login = "root";
-        String senha = "123";
+        String senha = "";
 
         try {
             String name = "Projeto";
@@ -112,8 +112,10 @@ public class Server implements Projeto {
             System.setProperty("java.rmi.server.hostname", getIP());
 
             Registry registry = LocateRegistry.createRegistry(1337);
-            registry.rebind(name, stub);
-            System.out.println("Servidor up");
+            System.out.println("Registry: " + registry); 
+			registry.rebind(name, stub);
+            System.out.println("Registry: " + registry);
+			System.out.println("Servidor up");
         } catch (Exception e) {
             System.err.println("Server exception:");
             e.printStackTrace();
