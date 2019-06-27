@@ -100,26 +100,27 @@ public class Server implements Projeto {
 
         String url = "jdbc:mysql://localhost:3306/MC833";
         String login = "root";
-        String senha = "";
+        String senha = "123";
+	Projeto projeto = null;
+	Server servidor = null;
 
         try {
             String name = "Projeto";
-            Projeto engine = new Server();
-            ((Server) engine).banco = new Database(url, login, senha);
-            ((Server) engine).banco.connect();
-            Projeto stub = (Projeto) UnicastRemoteObject.exportObject(engine, 0);
+            servidor = new Server();
+	    projeto = (Projeto) servidor;
+            servidor.banco = new Database(url, login, senha);
+            servidor.banco.connect();
 
             System.setProperty("java.rmi.server.hostname", getIP());
 
+            Projeto stub = (Projeto) UnicastRemoteObject.exportObject(projeto, 0);
             Registry registry = LocateRegistry.createRegistry(1337);
-            System.out.println("Registry: " + registry); 
-			registry.rebind(name, stub);
-            System.out.println("Registry: " + registry);
-			System.out.println("Servidor up");
+	    registry.rebind(name, stub);
+	    System.out.println("Servidor up");
+
         } catch (Exception e) {
             System.err.println("Server exception:");
             e.printStackTrace();
-
         }
     }
 }
