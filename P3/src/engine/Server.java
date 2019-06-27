@@ -7,7 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import compute.Interface;
+import compute.Projeto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +15,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileWriter;
 
-public class Server implements Interface {
+public class Server implements Projeto {
     public Database banco;
 
     public Server() {
@@ -103,11 +103,11 @@ public class Server implements Interface {
         String senha = "123";
 
         try {
-            String name = "Interface";
-            Interface engine = new Server();
-            ((Server) engine).banco = new Database(url, login, null);
+            String name = "Projeto";
+            Projeto engine = new Server();
+            ((Server) engine).banco = new Database(url, login, senha);
             ((Server) engine).banco.connect();
-            Interface stub = (Interface) UnicastRemoteObject.exportObject(engine, 0);
+            Projeto stub = (Projeto) UnicastRemoteObject.exportObject(engine, 0);
 
             System.setProperty("java.rmi.server.hostname", getIP());
 
